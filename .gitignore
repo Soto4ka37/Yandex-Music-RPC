@@ -1,0 +1,5 @@
+/.vs
+/.vscode
+*.pyc
+/test.py
+Yandex-Music-RPC-2.code-workspace

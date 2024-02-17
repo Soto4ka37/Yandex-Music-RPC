@@ -1,0 +1,7 @@
+yandex_music
+python-dotenv
+wxPython
+pillow
+pypresence
+selenium==4.8.1
+requests
