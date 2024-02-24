@@ -1,17 +1,18 @@
+from wx import App
+
 from gui.main_window import MainWindow
 from gui.controller import gui
-from wx import App
 
 from modules.data import data
 from modules.single_instance import single_instance, cleanup
-app = App()
 
-single_instance() # Проверяем запущено ли приложение
+app = App()
+single_instance()
 
 gui.main = MainWindow(None)
-app.MainLoop() # Запускаем основное окно
+app.MainLoop()
 
-# По закрытии основного окна сохраняем данные
+# После закрытия основного окна
 
 data.save()
 

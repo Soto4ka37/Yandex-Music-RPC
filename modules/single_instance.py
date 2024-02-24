@@ -1,8 +1,8 @@
-import os
-
 from wx import Dialog, Panel, BoxSizer, StaticText, Button, VERTICAL, ALL, EXPAND, EVT_BUTTON, HORIZONTAL, ALIGN_CENTER, ID_OK, ID_CANCEL, Icon
-from modules.data import LOCK_FILE, LOGO
+from os import O_CREAT, O_EXCL, O_RDWR, getpid, write, close, unlink, remove, open as os_open
 from sys import exit
+
+from modules.data import LOCK_FILE, LOGO
 
 class InfoDialog(Dialog):
     def __init__(self, parent, title, message):
@@ -38,7 +38,7 @@ class InfoDialog(Dialog):
 
 def single_instance():
     try:
-        lock_fd = os.open(LOCK_FILE, os.O_CREAT | os.O_EXCL | os.O_RDWR)
+        lock_fd = os_open(LOCK_FILE, O_CREAT | O_EXCL | O_RDWR)
     except FileExistsError:
         dialog = InfoDialog(None, 'Приложение уже открыто', message='Приложение уже открыто или было завершено неккоректно!')
         result = dialog.ShowModal()
@@ -46,9 +46,9 @@ def single_instance():
         if result == ID_CANCEL:
             exit()
     else:
-        os.write(lock_fd, str(os.getpid()).encode())
-        os.close(lock_fd)
+        write(lock_fd, str(getpid()).encode())
+        close(lock_fd)
 
 def cleanup():
-    try: os.unlink(LOCK_FILE); os.remove(LOCK_FILE)
+    try: unlink(LOCK_FILE); remove(LOCK_FILE)
     except: pass

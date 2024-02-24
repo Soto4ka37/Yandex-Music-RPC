@@ -5,7 +5,7 @@ def run():
     with open('requirements.txt', 'r') as file:
         requirements = file.read()
         pip = requirements.replace('\n', ' ')
-        os.system(f"pip3 install -U {pip}")
+        os.system(f'pip3 install -U {pip}')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run()

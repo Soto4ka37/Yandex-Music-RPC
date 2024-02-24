@@ -1,4 +1,4 @@
-import json
+from json import loads
 from time import sleep
 
 from selenium import webdriver
@@ -17,24 +17,24 @@ def is_active(driver):
 
 def get_token() -> str:
     capabilities = DesiredCapabilities.CHROME
-    capabilities["loggingPrefs"] = {"performance": "ALL"}
+    capabilities['loggingPrefs'] = {'performance': 'ALL'}
     capabilities['goog:loggingPrefs'] = {'performance': 'ALL'}
     driver = webdriver.Chrome(desired_capabilities=capabilities,
                             executable_path=ChromeDriverManager().install())
     driver.get(
-        "https://oauth.yandex.ru/authorize?response_type=token&client_id=23cabbbdc6cd418abb4b39c32c41195d")
+        'https://oauth.yandex.ru/authorize?response_type=token&client_id=23cabbbdc6cd418abb4b39c32c41195d')
 
     token = None
 
     while token == None and is_active(driver):
         sleep(1)
         try:
-            logs_raw = driver.get_log("performance")
+            logs_raw = driver.get_log('performance')
         except:
             pass
 
         for lr in logs_raw:
-            log = json.loads(lr["message"])["message"]
+            log = loads(lr['message'])['message']
             url_fragment = log.get('params', {}).get('frame', {}).get('urlFragment')
 
             if url_fragment:

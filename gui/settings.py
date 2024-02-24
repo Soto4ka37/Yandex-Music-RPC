@@ -1,16 +1,19 @@
 from wx import Notebook, Panel, CheckBox, Button, RadioButton, Frame, BoxSizer, StaticText, StaticBitmap, Event, ToolTip, StaticLine, Font, SpinCtrl, Dialog, Image as WxImage, Icon
-from wx import EVT_CHECKBOX, VERTICAL, ALL, EXPAND, EVT_CLOSE, ID_ANY, LI_HORIZONTAL, FONTSTYLE_NORMAL, FONTWEIGHT_NORMAL, FONTFAMILY_DEFAULT, EVT_SPINCTRL, EVT_BUTTON, HORIZONTAL, ALIGN_CENTER, EVT_RADIOBUTTON, RB_GROUP, LI_VERTICAL,  BITMAP_TYPE_ICO
+from wx import EVT_CHECKBOX, VERTICAL, ALL, EXPAND, EVT_CLOSE, ID_ANY, LI_HORIZONTAL, FONTSTYLE_NORMAL, FONTWEIGHT_NORMAL, FONTFAMILY_DEFAULT, EVT_SPINCTRL, EVT_BUTTON, HORIZONTAL, ALIGN_CENTER, EVT_RADIOBUTTON, RB_GROUP, LI_VERTICAL, DEFAULT_FRAME_STYLE, RESIZE_BORDER, MAXIMIZE_BOX
 from PIL import Image
 
 def CustomIcon(frame, *, path, size, pos):
     img = Image.open(path)
     img.thumbnail(size)
     wx_image = WxImage(img.width, img.height)
-    wx_image.SetData(img.convert("RGB").tobytes())
+    wx_image.SetData(img.convert('RGB').tobytes())
     return StaticBitmap(frame, bitmap=wx_image.ConvertToBitmap(), pos=pos)
 
-from modules.discord import rpc
 from gui.controller import gui
+from gui.debug import DebugWindow
+from gui.status_editor import StatusEditor
+from gui.buttons_editor import ButtonEditor
+from modules.discord import rpc
 from modules.data import NO_ICON, NEW_ICON, OLD_ICON, LOGO, data
 
 class YesNoDialog(Dialog):
@@ -48,18 +51,9 @@ class YesNoDialog(Dialog):
 
 class Settings(Frame):
     def __init__(self, parent):
-        super(Settings, self).__init__(parent, title='Настройки', size=(300, 430))
+        super(Settings, self).__init__(parent, title='Настройки', size=(300, 430), style=DEFAULT_FRAME_STYLE & ~(RESIZE_BORDER | MAXIMIZE_BOX))
         self.SetIcon(Icon(LOGO))
         self.Bind(EVT_CLOSE, self.close)
-        self.InitUI()
-        self.Centre()
-        self.Show()
-
-    def close(self, evemt: Event):
-        gui.settings = None
-        self.Destroy()
-
-    def InitUI(self):
         panel = Panel(self)
         notebook = Notebook(panel)
         big = Font(16, FONTFAMILY_DEFAULT, FONTSTYLE_NORMAL, FONTWEIGHT_NORMAL)
@@ -68,9 +62,9 @@ class Settings(Frame):
         tab2 = Panel(notebook)
         tab3 = Panel(notebook)
 
-        notebook.AddPage(tab1, "Приложение")
-        notebook.AddPage(tab2, "Статус")
-        notebook.AddPage(tab3, "Отладка")
+        notebook.AddPage(tab1, 'Приложение')
+        notebook.AddPage(tab2, 'Статус')
+        notebook.AddPage(tab3, 'Отладка')
 
         # Отладка
         StaticLine(tab3, ID_ANY, pos=(0, 0), size=(300, 1), style=LI_HORIZONTAL)
@@ -79,7 +73,7 @@ class Settings(Frame):
 
         StaticLine(tab3, ID_ANY, pos=(0, 30), size=(300, 1), style=LI_HORIZONTAL)
     
-        button = Button(tab3, label="Открыть журнал отладки", pos=(10, 40), size=(245, 40))
+        button = Button(tab3, label='Открыть журнал отладки', pos=(10, 40), size=(245, 40))
         button.Bind(EVT_BUTTON, self.open_debug)
 
 
@@ -89,14 +83,14 @@ class Settings(Frame):
         StaticText(tab1, label='При запуске', pos=(5, 3)).SetFont(big)
 
         StaticLine(tab1, ID_ANY, pos=(0, 30), size=(300, 1), style=LI_HORIZONTAL)
-    
-        autoconnect = CheckBox(tab1, label='Автоподключение', pos=(10, 40))
-        autoconnect.SetValue(data.auto_connect)
-        autoconnect.Bind(EVT_CHECKBOX, self.autoconnect_checkbox)
-        
-        check_updates = CheckBox(tab1, label='Проверять обновления', pos=(10, 60))
+
+        check_updates = CheckBox(tab1, label='- Проверять обновления', pos=(10, 40))
         check_updates.SetValue(data.check_updates)
         check_updates.Bind(EVT_CHECKBOX, self.checkupdates_checkbox)
+
+        autoconnect = CheckBox(tab1, label='- Автоподключение', pos=(10, 60))
+        autoconnect.SetValue(data.auto_connect)
+        autoconnect.Bind(EVT_CHECKBOX, self.autoconnect_checkbox)
 
         StaticLine(tab1, ID_ANY, pos=(0, 80), size=(300, 1), style=LI_HORIZONTAL)
 
@@ -104,20 +98,23 @@ class Settings(Frame):
 
         StaticLine(tab1, ID_ANY, pos=(0, 110), size=(300, 1), style=LI_HORIZONTAL)
     
-        check_updates = CheckBox(tab1, label='Предпросмотр трека (?)', pos=(10, 120))
-        check_updates.SetValue(data.check_updates)
-        check_updates.SetToolTip(ToolTip("Обновлять иконку трека в приложении (Не влияет на статус)"))
-        check_updates.Bind(EVT_CHECKBOX, self.checkupdates_checkbox)
+        update_icon = CheckBox(tab1, label='- Предпросмотр трека (?)', pos=(10, 120))
+        update_icon.SetValue(data.update_icon)
+        update_icon.SetToolTip(ToolTip('Обновлять иконку трека в приложении (Не влияет на статус)'))
+        update_icon.Bind(EVT_CHECKBOX, self.updateicon_checkbox)
 
-        yandex = SpinCtrl(tab1, value=str(data.yandex_request), min=1, max=30, pos=(10, 140))
-        yandex.SetToolTip(ToolTip("Задержка медлу запросами в секундах (От 1 до 30)"))
-        yandex.Bind(EVT_SPINCTRL, self.yandex_spin)
-        StaticText(tab1, label='Задержка - music.yandex.ru', pos=(50, 144)).SetToolTip(ToolTip("Задержка между запросами в секундах (От 1 до 30)"))
+        self.allow_cache = CheckBox(tab1, label='- Разрешить кэш (?)', pos=(20, 140))
+        self.allow_cache.SetValue(data.allow_cache)
+        self.allow_cache.SetToolTip(ToolTip('Сохраняет иконки в постоянной памяти для более быстрого обновления'))
+        self.allow_cache.Bind(EVT_CHECKBOX, self.allowcache_checkbox)
 
-        discord = SpinCtrl(tab1, value=str(data.discord_request), min=1, max=30, pos=(10, 160))
-        discord.SetToolTip(ToolTip("Задержка медлу запросами в секундах (От 1 до 30)"))
-        discord.Bind(EVT_SPINCTRL, self.discord_spin)
-        StaticText(tab1, label='Задержка - discord.com', pos=(50, 164)).SetToolTip(ToolTip("Задержка между запросами в секундах (От 1 до 30)"))
+        if not data.update_icon:
+            self.allow_cache.Disable()
+
+        discord = SpinCtrl(tab1, value=str(data.request), min=1, max=10, pos=(10, 160))
+        discord.SetToolTip(ToolTip('Время в секундах от 1 до 10'))
+        discord.Bind(EVT_SPINCTRL, self.request_spin)
+        StaticText(tab1, label='Задержка между запросами', pos=(50, 164)).SetToolTip(ToolTip('Задержка между запросами в секундах (От 1 до 10)'))
 
         StaticLine(tab1, ID_ANY, pos=(0, 190), size=(300, 1), style=LI_HORIZONTAL)
 
@@ -125,7 +122,7 @@ class Settings(Frame):
 
         StaticLine(tab1, ID_ANY, pos=(0, 220), size=(300, 1), style=LI_HORIZONTAL)
 
-        button = Button(tab1, label="Выполнить сброс настроек", pos=(10, 230), size=(245, 40))
+        button = Button(tab1, label='Выполнить сброс настроек', pos=(10, 230), size=(245, 40))
         button.Bind(EVT_BUTTON, self.reset)
 
         sizer = BoxSizer(VERTICAL)
@@ -140,10 +137,10 @@ class Settings(Frame):
         StaticLine(tab2, ID_ANY, pos=(0, 30), size=(300, 1), style=LI_HORIZONTAL)
 
 
-        button = Button(tab2, label="Статус", pos=(10, 35), size=(116, 40))
+        button = Button(tab2, label='Статус', pos=(10, 35), size=(116, 40))
         button.Bind(EVT_BUTTON, self.open_status_editor)
 
-        button = Button(tab2, label="Кнопки", pos=(138, 35), size=(116, 40))
+        button = Button(tab2, label='Кнопки', pos=(138, 35), size=(116, 40))
         button.Bind(EVT_BUTTON, self.open_buttons_editor)
 
         StaticLine(tab2, ID_ANY, pos=(0, 80), size=(300, 1), style=LI_HORIZONTAL)
@@ -211,12 +208,33 @@ class Settings(Frame):
 
         self.set_wave_default_value()
 
+        self.Centre()
+        self.Show()
+
+    def close(self, evemt: Event):
+        gui.settings = None
+        self.Destroy()
+
     def open_debug(self, event: Event):
-        pass
+        if not gui.debug:
+            gui.debug = DebugWindow(self)
+        if gui.debug.IsIconized():
+            gui.debug.Restore()
+        gui.debug.SetFocus()
+
     def open_status_editor(self, event: Event):
-        pass
+        if not gui.status_editor:
+            gui.status_editor = StatusEditor(self)
+        if gui.status_editor.IsIconized():
+            gui.status_editor.Restore()
+        gui.status_editor.SetFocus()
+
     def open_buttons_editor(self, event: Event):
-        pass
+        if not gui.button_editor:
+            gui.button_editor = ButtonEditor(self)
+        if gui.button_editor.IsIconized():
+            gui.button_editor.Restore()
+        gui.button_editor.SetFocus()
 
     def set_logo_default_value(self):
         if data.logo == 0:
@@ -276,11 +294,11 @@ class Settings(Frame):
         data.save()
         rpc.reload()
  
-    def reset (self, event: Event):
+    def reset(self, event: Event):
         dialog = YesNoDialog(self, 'Сброс', 'Вы действительно хотите сбросить настройки?')
         dialog.ShowModal()
         if dialog.answer:
-            gui.main.force_disconnect('Сброс настроек')
+            gui.main.force_disconnect('Сброс настроек', False)
             data.reset()
             gui.main.exit()
 
@@ -296,16 +314,18 @@ class Settings(Frame):
  
     def updateicon_checkbox(self, event: Event):
         data.update_icon = event.GetEventObject().GetValue()
+        if data.update_icon:
+            self.allow_cache.Enable()
+        else:
+            self.allow_cache.Disable()
         data.save()
-        rpc.reload()
- 
-    def yandex_spin(self, event: Event):
-        data.yandex_request = event.GetEventObject().GetValue()
+
+    def allowcache_checkbox(self, event: Event):
+        data.allow_cache = event.GetEventObject().GetValue()
         data.save()
-        rpc.reload()
  
-    def discord_spin(self, event: Event):
-        data.discord_request = event.GetEventObject().GetValue()
+    def request_spin(self, event: Event):
+        data.request = event.GetEventObject().GetValue()
         data.save()
         rpc.reload()
  

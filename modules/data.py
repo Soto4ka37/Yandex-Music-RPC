@@ -1,6 +1,6 @@
-VERSION = 'v1.0-dev-alpha'
-import os
-from sys import exit
+VERSION = '1.1-beta'
+
+from os import getenv, path, makedirs
 from json import dump, load
 from dotenv import dotenv_values, set_key
 from requests import get
@@ -13,50 +13,67 @@ def download(*, url: str, path: str):
     with open(path, 'wb') as file:
         file.write(response.content)
 
-APPDATA = os.getenv('APPDATA')
-APP_DIR = os.path.join(APPDATA, 'YM-RPC2')
+APPDATA = getenv('APPDATA')
+APP_DIR = path.join(APPDATA, 'YM-RPC-Reloaded')
 
-LOCK_FILE = os.path.join(APP_DIR, 'working')
-DATA_FILE = os.path.join(APP_DIR, 'data.json')
-TOKEN_FILE = os.path.join(APP_DIR, 'secret.env')
+# --------
 
-CACHE_DIR = os.path.join(APP_DIR, 'cache')
-ICONS_DIR = os.path.join(CACHE_DIR, 'icons')
+LOCK_FILE = path.join(APP_DIR, 'working')
+DATA_FILE = path.join(APP_DIR, 'data.json')
+TOKEN_FILE = path.join(APP_DIR, 'secret.env')
+LOG_FILE = path.join(APP_DIR, 'latest.log')
 
-NO_ICON = os.path.join(ICONS_DIR, 'no.png')
-OLD_ICON = os.path.join(ICONS_DIR, 'old.png')
-NEW_ICON = os.path.join(ICONS_DIR, 'new.png')
+CACHE_DIR = path.join(APP_DIR, 'cache')
 
-LOGO = os.path.join(ICONS_DIR, 'logo.ico')
-    
-if not os.path.exists(APP_DIR):
-    os.makedirs(APP_DIR)
+# -------- 
 
-if not os.path.exists(CACHE_DIR):
-    os.makedirs(CACHE_DIR)
+ASSETS_DIR = 'assets'
 
-if not os.path.exists(ICONS_DIR):
-    os.makedirs(ICONS_DIR)
+NO_ICON = path.join(ASSETS_DIR, 'no.png')
+OLD_ICON = path.join(ASSETS_DIR, 'old.png')
+NEW_ICON = path.join(ASSETS_DIR, 'new.png')
+WAVE_ICON = path.join(ASSETS_DIR, 'wave.png')
+PNG_LOGO = path.join(ASSETS_DIR, 'logo.png')
+LOGO = path.join(ASSETS_DIR, 'logo.ico')
 
-if not os.path.exists(NO_ICON):
-    download(url='0', path=NO_ICON)
+# Создание необходимых папок и скачивание необходимых файлов
+if not path.exists(APP_DIR):
+    makedirs(APP_DIR)
 
-if not os.path.exists(OLD_ICON):
-    download(url='0', path=OLD_ICON)
+if not path.exists(CACHE_DIR):
+    makedirs(CACHE_DIR)
 
-if not os.path.exists(NEW_ICON):
-    download(url='0', path=NEW_ICON)
+if not path.exists(NO_ICON):
+    NO_ICON = path.join(CACHE_DIR, 'no.png')
+    download(url='https://www.soto4ka37.ru/file/no.png', path=NO_ICON)
 
-if not os.path.exists(LOGO):
-    download(url='0', path=LOGO)
+if not path.exists(OLD_ICON):
+    OLD_ICON = path.join(CACHE_DIR, 'old.png')
+    download(url='https://www.soto4ka37.ru/file/old.png', path=OLD_ICON)
 
-if not os.path.exists(TOKEN_FILE):
+if not path.exists(NEW_ICON):
+    NEW_ICON = path.join(CACHE_DIR, 'new.png')
+    download(url='https://www.soto4ka37.ru/file/new.png', path=NEW_ICON)
+
+if not path.exists(WAVE_ICON):
+    WAVE_ICON = path.join(CACHE_DIR, 'wave.png')
+    download(url='https://www.soto4ka37.ru/file/wave.png', path=WAVE_ICON)
+
+if not path.exists(PNG_LOGO):
+    PNG_LOGO = path.join(CACHE_DIR, 'logo.png')
+    download(url='https://www.soto4ka37.ru/file/logo.png', path=PNG_LOGO)
+
+if not path.exists(LOGO):
+    LOGO = path.join(CACHE_DIR, 'logo.ico')
+    download(url='https://www.soto4ka37.ru/file/logo.ico', path=LOGO)
+
+if not path.exists(TOKEN_FILE):
     set_key(TOKEN_FILE, 'TOKEN', '0')
 
-if not os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "w") as file:
-       dump({}, file)
-
+if not path.exists(DATA_FILE):
+    with open(DATA_FILE, 'w') as file:
+        dump({}, file)
+        
 class Token:
     def __init__(self):
         self.token = self._load()
@@ -91,87 +108,107 @@ class Token:
         self.token = self._get_token()
         self._save()
 
+class Button:
+    def __init__(self, data: dict) -> None:
+        self.show_first: bool = data.get('show_first', False)
+        self.label_first: str = data.get('label_first', '')
+        self.url_first: str = data.get('url_first', '')
+        self.show_second: bool = data.get('show_second', False)
+        self.label_second: str = data.get('label_second', '')
+        self.url_second: str = data.get('url_second', '')
+
 class RPC_DATA:
-    DEFAULTS = {
-        'track': {'timer': 2, 'details': '%track-title%', 'state': '%track-authors%',
-                  'large': '%album-title% (%album-count%)', 'small': 'Очередь: %queue-index%/%queue-count%'},
-
-        'repeat': {'timer': 0, 'details': '%track-title%', 'state': '%track-authors%',
-                   'large': '%album-title% (%album-count%)', 'small': 'Очередь: %queue-index%/%queue-count%'},
-
-        'wave': {'timer': 1, 'details': 'Поток %description%', 'state': '',
-                 'large': ' %description%', 'small': 'Яндекс Музык'},
-    }
-
-    def __init__(self, data: dict, rpc_type: str) -> None:
-        self.type = rpc_type
-        defaults = self.DEFAULTS.get(rpc_type, {})
-        self.timer: int = data.get('timer', defaults.get('timer', 1))
-        self.details: str = data.get('details', defaults.get('details', 'Нет данных'))
-        self.state: str = data.get('state', defaults.get('state', ''))
-        self.large: str = data.get('large', defaults.get('large', 'RPC %ver% by Soto4ka37'))
-        self.small: str = data.get('small', defaults.get('small', 'Яндекс Музыка'))
-
+    def __init__(self, data: dict) -> None:
+        self.timer: int = data.get('timer', 1)
+        self.details: str = data.get('details', 'Нет данных')
+        self.state: str = data.get('state', '')
+        self.large: str = data.get('large', 'RPC %ver% by Soto4ka37')
+        self.small: str = data.get('small', 'Яндекс Музыка')
+        self.button = Button(data.get('button', {}))
 
 class Data:
     def __init__(self):
-        with open(DATA_FILE, "r") as file:
-            data: dict = load(file)
+        self.load()
 
-        self.check_updates: bool = data.get('check_updates', True)
-        self.auto_connect: bool = data.get('auto_connect', True)
-        self.update_icon: bool = data.get('update_icon', True)
-        self.yandex_request: int = data.get('yandex_request', 3)
-        self.discord_request: int = data.get('discord_request', 3)
-        self.logo: int = data.get('logo', 2)
-        self.track = RPC_DATA(data.get('track', {}), rpc_type='track')
-        self.repeat = RPC_DATA(data.get('repeat', {}), rpc_type='repeat')
-        self.wave = RPC_DATA(data.get('wave', {}), rpc_type='wave')
-    
+    def load(self):
+        with open(DATA_FILE, 'r') as file:
+            data: dict = load(file)
+        self._load(data)
+
     def reset(self):
-        data = {}
+        self._load({})
+        self.save()
+
+    def _load(self, data: dict):
         self.check_updates: bool = data.get('check_updates', True)
         self.auto_connect: bool = data.get('auto_connect', True)
         self.update_icon: bool = data.get('update_icon', True)
-        self.yandex_request: int = data.get('yandex_request', 3)
-        self.discord_request: int = data.get('discord_request', 3)
+        self.allow_cache: bool = data.get('allow_cache', True)
+        self.request: int = data.get('request', 3)
         self.logo: int = data.get('logo', 2)
-        self.track = RPC_DATA(data.get('track', {}), rpc_type='track')
-        self.repeat = RPC_DATA(data.get('repeat', {}), rpc_type='repeat')
-        self.wave = RPC_DATA(data.get('wave', {}), rpc_type='wave')
-        self.save()
+        self.track = RPC_DATA(data.get('track', {'timer': 2, 'details': '%track-title%', 'state': '%track-authors%', 'large': '%album-title% (%album-len%)', 'small': '%queue-len% из %queue-count%', 'button': {'show_first': True, 'label_first': 'Слушать', 'url_first': '%track-url%'}}))
+        self.repeat = RPC_DATA(data.get('repeat', {'timer': 0, 'details': '%track-title%', 'state': '%track-authors%', 'large': '%album-title% (%album-len%)', 'small': 'Трек повторяется', 'button': {'show_first': True, 'label_first': 'Слушать', 'url_first': '%track-url%'}}))
+        self.wave = RPC_DATA(data.get('wave', {'timer': 1, 'details': 'Поток "%description%"', 'state': '', 'large': ' %description%', 'small': 'Яндекс Музыка'}))
+        self.exit_position_x = data.get('exit_position_x', None)
+        self.exit_position_y = data.get('exit_position_y', None)
 
     def save(self):
         data = {
-            "check_updates": self.check_updates,
-            "auto_connect": self.auto_connect,
-            "update_icon": self.update_icon,
-            "yandex_request": self.yandex_request,
-            "discord_request": self.discord_request,
-            "logo": self.logo,
-            "track": {
-                "timer": self.track.timer,
-                "details": self.track.details,
-                "state": self.track.state,
-                "large": self.track.large,
-                "small": self.track.small
+            'check_updates': self.check_updates,
+            'auto_connect': self.auto_connect,
+            'update_icon': self.update_icon,
+            'allow_cache': self.allow_cache,
+            'request': self.request,
+            'exit_position_x': self.exit_position_x,
+            'exit_position_y': self.exit_position_y,
+            'logo': self.logo,
+            'track': {
+                'timer': self.track.timer,
+                'details': self.track.details,
+                'state': self.track.state,
+                'large': self.track.large,
+                'small': self.track.small,
+                'button': {
+                    'show_first': self.track.button.show_first,
+                    'label_first': self.track.button.label_first,
+                    'url_first': self.track.button.url_first,
+                    'show_second': self.track.button.show_second,
+                    'label_second': self.track.button.label_second,
+                    'url_second': self.track.button.url_second,
+                },
             },
-            "repeat": {
-                "timer": 'НЕ ИСПОЛЬЗУЕТСЯ',
-                "details": self.repeat.details,
-                "state": self.repeat.state,
-                "large": self.repeat.large,
-                "small": self.repeat.small
+            'repeat': {
+                'timer': 'НЕ ИСПОЛЬЗУЕТСЯ',
+                'details': self.repeat.details,
+                'state': self.repeat.state,
+                'large': self.repeat.large,
+                'small': self.repeat.small,
+                'button': {
+                    'show_first': self.track.button.show_first,
+                    'label_first': self.track.button.label_first,
+                    'url_first': self.track.button.url_first,
+                    'show_second': self.track.button.show_second,
+                    'label_second': self.track.button.label_second,
+                    'url_second': self.track.button.url_second,
+                },
             },
-            "wave": {
-                "timer": self.wave.timer,
-                "details": self.wave.details,
-                "state": self.wave.state,
-                "large": self.wave.large,
-                "small": self.wave.small
+            'wave': {
+                'timer': self.wave.timer,
+                'details': self.wave.details,
+                'state': self.wave.state,
+                'large': self.wave.large,
+                'small': self.wave.small,
+                'button': {
+                    'show_first': self.track.button.show_first,
+                    'label_first': self.track.button.label_first,
+                    'url_first': self.track.button.url_first,
+                    'show_second': self.track.button.show_second,
+                    'label_second': self.track.button.label_second,
+                    'url_second': self.track.button.url_second,
+                },
             }
         }
-        with open(DATA_FILE, "w") as file:
+        with open(DATA_FILE, 'w') as file:
             dump(data, file)
 
 data = Data()

@@ -3,3 +3,8 @@
 *.pyc
 /test.py
 Yandex-Music-RPC-2.code-workspace
+*.exe
+/main-dist
+/main-build
+/pyinstaller
+/output

@@ -1,8 +1,11 @@
-class Windows:
+class GUI:
+    '''Класс для хранения объектов интерфейса'''
     def __init__(self):
         self.main = None
+        self.debug = None
         self.settings = None
         self.button_editor = None
-        self.labels_editir = None
-
-gui = Windows()
+        self.status_editor = None
+        self.help = None
+         
+gui = GUI()

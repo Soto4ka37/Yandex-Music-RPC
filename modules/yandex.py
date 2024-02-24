@@ -1,9 +1,7 @@
-from modules.data import Token
 from yandex_music import Client, Track, Album, exceptions
 from traceback import format_exc
-from time import sleep
 
-from modules.data import data
+from modules.data import data, Token
 from modules.debugger import debugger
 
 class CritErr(Exception):
@@ -16,18 +14,18 @@ class ShortAlbum():
         self.name = self.title = album.title
         self.id = album.id
         self.count = album.track_count
-        self.url = self.link = f"https://music.yandex.ru/album/{album.id}/"
+        self.url = self.link = f'https://music.yandex.ru/album/{album.id}/'
 
 class ShortTrack():
     '''Упрощённый класс с информацией о треке'''
-    def __init__(self, track: Track):
+    def __init__(self, track: Track) -> None:
         self.name = self.title = track.title
         self.id = track.id
         self.authors = self.artists = ', '.join(track.artists_name())
-        self.icon_low = "https://" + track.cover_uri.replace("%%", "200x200")
-        self.icon_high = "https://" + track.cover_uri.replace("%%", "1000x1000")
+        self.icon_low = 'https://' + track.cover_uri.replace('%%', '200x200')
+        self.icon_high = 'https://' + track.cover_uri.replace('%%', '1000x1000')
         
-        self.url = self.link = f"https://music.yandex.ru/track/{track.id}/"
+        self.url = self.link = f'https://music.yandex.ru/track/{track.id}/'
 
         self.albums = [ShortAlbum(album) for album in track.albums]
         self.album = self.albums[0]
@@ -40,7 +38,6 @@ class Music:
     def __init__(self) -> None:
         self.client = self.get_yandex_client()
         self.clear()
-        # По умолчанию класс имеет пустые значения, для их обновления необходимо вызвать .update()
 
     def clear(self):
         self.track = None
@@ -51,19 +48,6 @@ class Music:
         self.autoupdate = None
         self.type = None
 
-    def start_autoupdate(self):
-        self.autoupdate = True
-        debugger.addInfo('Автообновление запущено')
-        while self.autoupdate:
-            try:
-                self.update()
-            except:
-                debugger.addWarning('Не удалось обновить трек.')
-                debugger.addWarning(format_exc())
-            sleep(data.yandex_request)
-        self.clear()
-        debugger.addInfo('Автообновление отключено; память очищена')
-
     def stop_autoupdate(self):
         self.autoupdate = False  
 
@@ -71,7 +55,7 @@ class Music:
         try:
             queue_list = self.client.queues_list()
             if not queue_list:
-                debugger.addError('Для текущего акккаунта нет активных очередей.')
+                debugger.addInfo('Для текущего акккаунта нет активных очередей.')
                 raise CritErr('Для текущего акккаунта нет активных очередей.')
             
             queue = queue_list.pop(0).fetch_queue()
@@ -108,7 +92,7 @@ class Music:
             if not client or not client.accountStatus():
                 raise CritErr('Аккаунт не валиден')
         except Exception as e:
-            debugger.addError(f'Неудачная авторизация! Ошибка: {e}')
+            debugger.addInfo(f'Неудачная авторизация! Ошибка: {e}')
             debugger.addError(format_exc())
             token.reset()
             token.update()
