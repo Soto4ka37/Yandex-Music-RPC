@@ -1,4 +1,45 @@
-VERSION = '1.1-beta'
+VERSION = 'v1.3'
+
+import wx
+
+class Warning(wx.Dialog):
+    def __init__(self, parent):
+        super(Warning, self).__init__(parent, title=f'Спасибо за установку YM-RPC {VERSION}', size=(400, 270))
+        self.SetIcon(wx.Icon(LOGO)) 
+        panel = wx.Panel(self)
+        
+        panel_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        text = '''Спасибо за установку Yandex Music RPC!
+
+В данный момент API Яндекс Музыки работает нестабильно.
+
+Статус не будет обновляться:
+
+1) В браузерной версии по причине неизвестной ошибки на стороне Яндекса.
+
+2) В новом клиенте по причине отсутсвии синхронизации с серверами.
+
+Также на некоторых аккаунтах скрипт может не работать ПОЛНОСТЬЮ.'''
+        static_text = wx.StaticText(panel, label=text)
+        panel_sizer.Add(static_text, 0, wx.ALL, 5)
+        
+        panel_sizer.Add((0, 0), 1, wx.EXPAND)
+        
+        yes_button = wx.Button(panel, label='Перейти к авторизации')
+        yes_button.Bind(wx.EVT_BUTTON, self.on_yes)
+        yes_button.SetMinSize((yes_button.GetSize()[0], 40))
+        
+        panel_sizer.Add(yes_button, 0, wx.EXPAND|wx.ALL, 5)
+        panel.SetSizer(panel_sizer)
+        
+        self.answer = None
+        self.Centre()
+        self.ShowModal()
+
+    def on_yes(self, event):
+        self.answer = True
+        self.Close()
 
 from os import getenv, path, makedirs
 from json import dump, load
@@ -45,27 +86,33 @@ if not path.exists(CACHE_DIR):
 
 if not path.exists(NO_ICON):
     NO_ICON = path.join(CACHE_DIR, 'no.png')
-    download(url='https://www.soto4ka37.ru/file/no.png', path=NO_ICON)
+    if not path.exists(NO_ICON):
+        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/no.png', path=NO_ICON)
 
 if not path.exists(OLD_ICON):
     OLD_ICON = path.join(CACHE_DIR, 'old.png')
-    download(url='https://www.soto4ka37.ru/file/old.png', path=OLD_ICON)
+    if not path.exists(OLD_ICON):
+        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/old.png', path=OLD_ICON)
 
 if not path.exists(NEW_ICON):
     NEW_ICON = path.join(CACHE_DIR, 'new.png')
-    download(url='https://www.soto4ka37.ru/file/new.png', path=NEW_ICON)
+    if not path.exists(NEW_ICON):
+        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/new.png', path=NEW_ICON)
 
 if not path.exists(WAVE_ICON):
     WAVE_ICON = path.join(CACHE_DIR, 'wave.png')
-    download(url='https://www.soto4ka37.ru/file/wave.png', path=WAVE_ICON)
+    if not path.exists(WAVE_ICON):
+        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/wave.png', path=WAVE_ICON)
 
 if not path.exists(PNG_LOGO):
     PNG_LOGO = path.join(CACHE_DIR, 'logo.png')
-    download(url='https://www.soto4ka37.ru/file/logo.png', path=PNG_LOGO)
+    if not path.exists(PNG_LOGO):
+        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/logo.png', path=PNG_LOGO)
 
 if not path.exists(LOGO):
     LOGO = path.join(CACHE_DIR, 'logo.ico')
-    download(url='https://www.soto4ka37.ru/file/logo.ico', path=LOGO)
+    if not path.exists(LOGO):
+        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/logo.ico', path=LOGO)
 
 if not path.exists(TOKEN_FILE):
     set_key(TOKEN_FILE, 'TOKEN', '0')
@@ -78,11 +125,15 @@ class Token:
     def __init__(self):
         self.token = self._load()
         if not self.token or len(self.token) < 4:
-            self.token = self._get_token()
-            if not self.token or len(self.token) < 4:
-                exit()
+            warn = Warning(None)
+            if warn.answer:
+                self.token = self._get_token()
+                if not self.token or len(self.token) < 4:
+                    exit()
+                else:
+                    self._save()
             else:
-                self._save()
+                exit()
                 
     def __str__(self) -> str:
         return self.token
@@ -151,6 +202,7 @@ class Data:
         self.wave = RPC_DATA(data.get('wave', {'timer': 1, 'details': 'Поток "%description%"', 'state': '', 'large': ' %description%', 'small': 'Яндекс Музыка'}))
         self.exit_position_x = data.get('exit_position_x', None)
         self.exit_position_y = data.get('exit_position_y', None)
+        self.animate_wave = data.get('animate_wave', True)
 
     def save(self):
         data = {
@@ -161,6 +213,7 @@ class Data:
             'request': self.request,
             'exit_position_x': self.exit_position_x,
             'exit_position_y': self.exit_position_y,
+            'animate_wave': self.animate_wave,
             'logo': self.logo,
             'track': {
                 'timer': self.track.timer,

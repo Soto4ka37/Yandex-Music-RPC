@@ -6,7 +6,7 @@ from gui.controller import gui
 
 from modules.formate import formate_string
 from modules.data import data, WAVE_ICON, PNG_LOGO
-from modules.yandex import api
+from modules.yandex import api2
 from modules.debugger import debugger
 from modules.formate import cut_string
 from pypresence.exceptions import PipeClosed
@@ -56,27 +56,17 @@ class RPC:
     def confirm_settings(self):
         if data.logo:
             if data.logo == 2:
-                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC-Lite/master/assets/RPC-New.png'
+                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/github/new-black.png'
             else:
-                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC-Lite/master/assets/RPC-Default.png'
+                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/github/old-black.png'
         else:
             self.logo = None
 
-        if data.track.timer == 1:
-            self.repeat_func = self.track_timer1
-            self.track_timer_func = self._timer_and_end
-        elif data.track.timer == 2:
-            self.repeat_func = self.track_timer2
-            self.track_timer_func = self._timer_and_end
+        if data.animate_wave:
+            self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/github/wave.gif'
         else:
-            self.repeat_func = self._pass_func
-            self.track_timer_func = self._timer_and_end_None
-
-        if data.wave.timer:
-            self.wave_timer_func = self._timer
-        else:
-            self.wave_timer_func = self._timer_and_end_None
-
+            self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/wave.png'
+            
         self.track_buttons = []
         if data.track.button.show_first:
             if is_url(data.track.button.url_first) or data.track.button.url_first == '%track-url%' and data.track.button.label_first:
@@ -131,93 +121,33 @@ class RPC:
         if not self.wave_buttons:
             self.wave_buttons = None
 
-    def track_timer1(self):
-        repeat = data.repeat
-        if time() - self.last_timer >= api.track.seconds + api.track.minutes * 60:
-            self.last_timer = int(time())
-            end = int(time() + api.track.minutes * 60 + api.track.seconds)
-            details = formate_string(repeat.details)
-            state = formate_string(repeat.state)
-            large = formate_string(repeat.large)
-            small = formate_string(repeat.small)
-            debugger.addSuccess(f'Трек повторяется')
-            
-            if self.repeat_buttons:
-                for button in self.repeat_buttons:
-                    if button.get('url') == '%track-url%':
-                        button['url'] = api.track.url
-
-            self.client.update(
-                state=state,
-                details=details,
-                small_image=self.logo,
-                end=end,
-                buttons=self.repeat_buttons,
-                large_image=api.track.icon_high,
-                large_text=large,
-                small_text=small,
-                )
-            
-    def track_timer2(self):
-        repeat = data.repeat
-        if self.now != 'r': 
-            if time() - self.last_timer >= api.track.seconds + api.track.minutes * 60:
-                self.now = 'r'
-                details = formate_string(repeat.details)
-                state = formate_string(repeat.state)
-                large = formate_string(repeat.large)
-                small = formate_string(repeat.small)
-                debugger.addSuccess(f'Переход в режим повтора')
-
-                if self.repeat_buttons:
-                    for button in self.repeat_buttons:
-                        if button.get('url') == '%track-url%':
-                            button['url'] = api.track.url
-
-                self.client.update(
-                    state=state,
-                    details=details,
-                    small_image=self.logo,
-                    start=self.last_timer,
-                    buttons=self.repeat_buttons,
-                    large_image=api.track.icon_high,
-                    large_text=large,
-                    small_text=small,
-            )
-                
-    def _pass_func(self):
-        pass
-
-    def _timer(self):
-        self.last_timer = int(time())
-
-    def _timer_and_end(self):
-        self.end = int(time() + api.track.minutes * 60 + api.track.seconds)
-        self.last_timer = int(time())
-
-    def _timer_and_end_None(self):
-        self.last_timer = None
-        self.end = None
-    
     def update(self):
         track = data.track
         wave = data.wave
-        api.update()
-        if api.track: # Трек
-            if self.last_track_id != api.track.id:
-                self.last_track_id = api.track.id
+        resp = api2.update()
+        if not resp:
+            return
+        if resp.track: # Трек
+            if self.last_track_id != resp.track.id:
+                self.last_track_id = resp.track.id
                 self.now = 't'
-                self.track_timer_func()
 
-                details = formate_string(track.details)
-                state = formate_string(track.state)
-                large = formate_string(track.large)
-                small = formate_string(track.small)
+                if track.timer:
+                    self.end = int(time() + resp.track.minutes * 60 + resp.track.seconds)
+                    self.last_timer = int(time())
+                else:   
+                    self.end == None
+                    self.last_timer == None
+
+                details = formate_string(track.details, response=resp)
+                state = formate_string(track.state, response=resp)
+                large = formate_string(track.large, response=resp)
+                small = formate_string(track.small, response=resp)
                 
                 if self.track_buttons:
                     for button in self.track_buttons:
                         if button.get('url') == '%track-url%':
-                            button['url'] = api.track.url
+                            button['url'] = resp.track.url
 
                 self.client.update(
                     state=state,
@@ -225,7 +155,7 @@ class RPC:
                     small_image=self.logo,
                     end=self.end,
                     buttons=self.track_buttons,
-                    large_image=api.track.icon_high,
+                    large_image=resp.track.icon_high,
                     large_text=large,
                     small_text=small,
                 )
@@ -233,12 +163,64 @@ class RPC:
 
                 gui.main.set_title(details)
                 gui.main.set_author(state)
-                gui.main.set_icon(api.track.icon_low, name=f'{api.track.album.id}.png')
-            else:
-                self.repeat_func()
+                gui.main.set_icon(resp.track.icon_low, name=f'{resp.track.album.id}.png')
+            elif track.timer and self.last_timer:
+                if track.timer == 1:
+                    repeat = data.repeat
+                    if time() - self.last_timer >= resp.track.seconds + resp.track.minutes * 60:
+                        self.last_timer = int(time())
+                        end = int(time() + resp.track.minutes * 60 + resp.track.seconds)
+                        details = formate_string(repeat.details, response=resp)
+                        state = formate_string(repeat.state, response=resp)
+                        large = formate_string(repeat.large, response=resp)
+                        small = formate_string(repeat.small, response=resp)
+                        debugger.addSuccess(f'Трек повторяется')
+                        
+                        if self.repeat_buttons:
+                            for button in self.repeat_buttons:
+                                if button.get('url') == '%track-url%':
+                                    button['url'] = resp.track.url
+
+                        self.client.update(
+                            state=state,
+                            details=details,
+                            small_image=self.logo,
+                            end=end,
+                            buttons=self.repeat_buttons,
+                            large_image=resp.track.icon_high,
+                            large_text=large,
+                            small_text=small,
+                )
+    
+                elif track.timer == 2:
+                    repeat = data.repeat
+                    if self.now != 'r': 
+                        if time() - self.last_timer >= resp.track.seconds + resp.track.minutes * 60:
+                            self.now = 'r'
+                            details = formate_string(repeat.details, response=resp)
+                            state = formate_string(repeat.state, response=resp)
+                            large = formate_string(repeat.large, response=resp)
+                            small = formate_string(repeat.small, response=resp)
+                            debugger.addSuccess(f'Переход в режим повтора')
+
+                            if self.repeat_buttons:
+                                for button in self.repeat_buttons:
+                                    if button.get('url') == '%track-url%':
+                                        button['url'] = resp.track.url
+
+                            self.client.update(
+                                state=state,
+                                details=details,
+                                small_image=self.logo,
+                                start=self.last_timer,
+                                buttons=self.repeat_buttons,
+                                large_image=resp.track.icon_high,
+                                large_text=large,
+                                small_text=small,
+                        )
 
         else: # Поток
-            if api.type != 'radio': # Если нет данных о треке и это не поток очищаем статус
+            if resp.type != 'radio': # Если нет данных о треке и это не поток очищаем статус
                 if self.now == 'c':
                     return
                 gui.main.set_title('Нет данных')
@@ -248,19 +230,23 @@ class RPC:
                 self.now = 'c'
                 return
             
-            if self.last_description == api.description:
+            if self.last_description == resp.description:
                 return 
             
-            self.last_description = api.description
+            self.last_description = resp.description
 
-            self.wave_timer_func()
+            if data.wave.timer:
+                self.last_timer = int(time())
+            else:
+                self.last_timer = None
+                self.end = None
 
-            details = formate_string(wave.details)
-            state = formate_string(wave.state)
-            large = formate_string(wave.large)
-            small = formate_string(wave.small)
+            details = formate_string(wave.details, response=resp)
+            state = formate_string(wave.state, response=resp)
+            large = formate_string(wave.large, response=resp)
+            small = formate_string(wave.small, response=resp)
 
-            
+        
             self.client.update(
                 state=state,
                 start=self.last_timer,
@@ -272,7 +258,7 @@ class RPC:
                 small_text=small,
             )
 
-            debugger.addSuccess(f'Смена трека: Поток - {api.description}')
+            debugger.addSuccess(f'Смена трека: Поток - {resp.description}')
 
             gui.main.set_title(details)
             gui.main.set_author(state)

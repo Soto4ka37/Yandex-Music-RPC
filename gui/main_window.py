@@ -1,5 +1,4 @@
-from wx import Frame, Panel, CheckBox,  StaticBitmap, StaticText, StaticLine, Event, Button, Icon, Menu, Image as WxImage, CallAfter, GetMousePosition
-from wx import EVT_CLOSE, ID_ANY, EVT_CHECKBOX, EVT_BUTTON, LI_HORIZONTAL, NullBitmap, EVT_MENU, EVT_LEFT_DOWN, EVT_LEFT_UP, DEFAULT_FRAME_STYLE, RESIZE_BORDER, MAXIMIZE_BOX
+import wx
 from wx.adv import TaskBarIcon, EVT_TASKBAR_LEFT_DOWN, EVT_TASKBAR_RIGHT_DOWN
 from requests import get
 from io import BytesIO
@@ -14,36 +13,36 @@ from gui.controller import gui
 
 from modules.debugger import debugger
 from modules.data import data, VERSION, LOGO, CACHE_DIR, PNG_LOGO
-from modules.yandex import api
+from modules.yandex import api2
 from modules.discord import rpc
 
-class MainWindow(Frame):
+class MainWindow(wx.Frame):
     def __init__(self, parent = None):
-        Frame.__init__(self, parent, title=f'RPC {VERSION}', size=(450, 130), style=DEFAULT_FRAME_STYLE & ~(RESIZE_BORDER | MAXIMIZE_BOX))
+        wx.Frame.__init__(self, parent, title=f'RPC {VERSION}', size=(450, 130), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
 
         self.dragging = None
         self.connecting = None
         self.autoudate = None
         self.last_connect = 0
 
-        self.panel = Panel(self)
-        self.Bind(EVT_CLOSE, self.close)
+        self.panel = wx.Panel(self)
+        self.Bind(wx.EVT_CLOSE, self.close)
 
         self.tray_icon = TrayIcon(self)
-        self.SetIcon(Icon(LOGO))
+        self.SetIcon(wx.Icon(LOGO))
 
-        self.checkbox = CheckBox(self.panel, label='- Активировать / Деактивировать', pos=(90, 10))
-        self.checkbox.Bind(EVT_CHECKBOX, self.connect)
+        self.checkbox = wx.CheckBox(self.panel, label='- Активировать / Деактивировать', pos=(90, 10))
+        self.checkbox.Bind(wx.EVT_CHECKBOX, self.connect)
 
-        button = Button(self.panel, label='Параметры', pos=(300, 8), size=(130, 20))
-        button.Bind(EVT_BUTTON, self.open_settings)
+        self.button = wx.Button(self.panel, label='Параметры', pos=(300, 8), size=(130, 20))
+        self.button.Bind(wx.EVT_BUTTON, self.open_settings)
 
-        self.line = StaticLine(self.panel, ID_ANY, pos=(90, 35), size=(340, 1), style=LI_HORIZONTAL)
+        self.line = wx.StaticLine(self.panel, wx.ID_ANY, pos=(90, 35), size=(340, 1), style=wx.LI_HORIZONTAL)
 
-        self.title = StaticText(self.panel, label='Отлючено', pos=(95, 43))
-        self.author = StaticText(self.panel, label='', pos=(95, 60))
+        self.title = wx.StaticText(self.panel, label='Отлючено', pos=(95, 43))
+        self.author = wx.StaticText(self.panel, label='', pos=(95, 60))
         
-        self.icon = StaticBitmap(self.panel, bitmap=NullBitmap, pos=(5, 5))
+        self.icon = wx.StaticBitmap(self.panel, bitmap=wx.NullBitmap, pos=(5, 5))
         self.set_icon(PNG_LOGO, name='logo.png', force=True)
 
         if data.exit_position_x and data.exit_position_y:
@@ -54,9 +53,9 @@ class MainWindow(Frame):
         else:
             self.Centre()
         
-        for widget in (self.panel, self.title, self.author, self.icon):
-            widget.Bind(EVT_LEFT_DOWN, self.on_left_down)
-        self.panel.Bind(EVT_LEFT_UP, self.on_left_up)
+        for widget in (self.panel, self.title, self.author, self.icon, self.line):
+            widget.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
+            widget.Bind(wx.EVT_LEFT_UP, self.on_left_up)
 
         self.checkbox.SetValue(data.auto_connect)
         self.Show(True)
@@ -64,23 +63,23 @@ class MainWindow(Frame):
             self.connect()
 
     def drag_task(self):
+        click_pos = wx.GetMousePosition() - self.GetPosition()
         while self.dragging:
-            self.SetPosition(GetMousePosition() - self.GetSize() / 2)
+            self.SetPosition(wx.GetMousePosition() - click_pos)
             sleep(0.01)
             
-    def on_left_down(self, event: Event = None):
+    def on_left_down(self, event: wx.Event = None):
         if not self.dragging:
             self.dragging = True
             dragging = Thread(target=self.drag_task, name='Drag-Window')
             dragging.start()
 
-    def on_left_up(self, event: Event = None):
+    def on_left_up(self, event: wx.Event = None):
         if self.dragging:
             self.dragging = False
 
     def force_disconnect(self, reason: str, error: bool = True):
         rpc.stop_autoupdate()
-        api.stop_autoupdate()
         if reason != 'Вы переподключаетесь слишком часто!':
             self.last_connect = time()
         if error:
@@ -93,7 +92,7 @@ class MainWindow(Frame):
         debugger.addInfo(f'Аварийное завершение: {reason}')
         self.checkbox.SetValue(False)
 
-    def connect(self, event: Event = None):
+    def connect(self, event: wx.Event = None):
         checkbox = self.checkbox
         if self.connecting and self.connecting.is_alive():
             checkbox.SetValue(not checkbox.GetValue())
@@ -114,7 +113,6 @@ class MainWindow(Frame):
         else:
             debugger.addInfo('Пользователь деактивировал программу')
             self.last_connect = time()
-            api.stop_autoupdate()
             rpc.stop_autoupdate()
             self.set_title('Работа завершена')
             self.set_author('')
@@ -123,7 +121,7 @@ class MainWindow(Frame):
     def after_connect(self):
         self.set_author('Подключение к api.music.yandex.ru')
         try:
-            api.update()
+            api2.update()
         except Exception as e:
             debugger.addInfo('Запрос на api.music.yandex.ru не удался')
             self.force_disconnect(str(e), True)
@@ -161,7 +159,6 @@ class MainWindow(Frame):
 
     def exit(self):
         data.exit_position_x, data.exit_position_y = self.GetPosition()
-        api.stop_autoupdate()
         rpc.stop_autoupdate()
         self.tray_icon.Destroy()
         if gui.settings:
@@ -179,9 +176,9 @@ class MainWindow(Frame):
         if gui.help:
             gui.help.Destroy()
             gui.help = None
-        CallAfter(self.Destroy)
+        wx.CallAfter(self.Destroy)
 
-    def close(self, event: Event):
+    def close(self, event: wx.Event):
         if gui.settings:
             gui.settings.Destroy()
             gui.settings = None
@@ -232,11 +229,11 @@ class MainWindow(Frame):
         else:
             img = Image.open(path_or_url)
         img.thumbnail((80, 80))
-        wx_image = WxImage(img.width, img.height)
+        wx_image = wx.Image(img.width, img.height)
         wx_image.SetData(img.convert('RGB').tobytes())
         self.icon.SetBitmap(wx_image.ConvertToBitmap())
 
-    def open_settings(self, event: Event):
+    def open_settings(self, event: wx.Event):
         if not gui.settings:
             gui.settings = Settings(self)
         if gui.settings.IsIconized():
@@ -244,39 +241,38 @@ class MainWindow(Frame):
         gui.settings.SetFocus()
 
 class TrayIcon(TaskBarIcon):
-    def __init__(self, frame: Frame):
+    def __init__(self, frame: wx.Frame):
         TaskBarIcon.__init__(self)
         self.frame = frame
-        self.SetIcon(Icon(LOGO), f'RPC {VERSION}')
+        self.SetIcon(wx.Icon(LOGO), f'RPC {VERSION}')
         self.Bind(EVT_TASKBAR_LEFT_DOWN, self.onLeftClick)
         self.Bind(EVT_TASKBAR_RIGHT_DOWN, self.onRightClick)
 
     def CreatePopupMenu(self):
-        menu = Menu()
-        open_item = menu.Append(ID_ANY, 'Открыть')
-        self.Bind(EVT_MENU, self.onOpen, open_item)
-        exit_item = menu.Append(ID_ANY, 'Выход')
-        self.Bind(EVT_MENU, self.onExit, exit_item)
+        menu = wx.Menu()
+        open_item = menu.Append(wx.ID_ANY, 'Открыть')
+        self.Bind(wx.EVT_MENU, self.onOpen, open_item)
+        exit_item = menu.Append(wx.ID_ANY, 'Выход')
+        self.Bind(wx.EVT_MENU, self.onExit, exit_item)
         return menu
 
-    def onLeftClick(self, event: Event):
+    def onLeftClick(self, event: wx.Event):
         if self.frame.IsIconized():
             self.frame.Iconize(False)
         self.frame.Show(True)
         self.frame.Raise()
 
-    def onRightClick(self, event: Event):
+    def onRightClick(self, event: wx.Event):
         self.PopupMenu(self.CreatePopupMenu())
 
-    def onOpen(self, event: Event):
+    def onOpen(self, event: wx.Event):
         if self.frame.IsIconized():
             self.frame.Iconize(False)
         self.frame.Show(True)
         self.frame.Raise()
 
-    def onExit(self, event: Event):
+    def onExit(self, event: wx.Event):
         data.exit_position_x, data.exit_position_y = self.frame.GetPosition()
-        api.stop_autoupdate()
         rpc.stop_autoupdate()
         self.frame.Destroy()
         if gui.settings:
@@ -294,4 +290,4 @@ class TrayIcon(TaskBarIcon):
         if gui.help:
             gui.help.Destroy()
             gui.help = None
-        CallAfter(self.Destroy)
+        wx.CallAfter(self.Destroy)

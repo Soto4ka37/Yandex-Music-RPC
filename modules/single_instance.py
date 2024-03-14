@@ -1,39 +1,40 @@
-from wx import Dialog, Panel, BoxSizer, StaticText, Button, VERTICAL, ALL, EXPAND, EVT_BUTTON, HORIZONTAL, ALIGN_CENTER, ID_OK, ID_CANCEL, Icon
+import wx
+
 from os import O_CREAT, O_EXCL, O_RDWR, getpid, write, close, unlink, remove, open as os_open
 from sys import exit
 
 from modules.data import LOCK_FILE, LOGO
 
-class InfoDialog(Dialog):
+class InfoDialog(wx.Dialog):
     def __init__(self, parent, title, message):
         super(InfoDialog, self).__init__(parent, title=title)
 
-        panel = Panel(self)
-        vbox = BoxSizer(VERTICAL)
-        self.SetIcon(Icon(LOGO))
+        panel = wx.Panel(self)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        self.SetIcon(wx.Icon(LOGO))
 
-        message_label = StaticText(panel, label=message)
-        vbox.Add(message_label, 0, ALL | EXPAND, 20)
+        message_label = wx.StaticText(panel, label=message)
+        vbox.Add(message_label, 0, wx.ALL | wx.EXPAND, 20)
 
-        btn_continue = Button(panel, label='Продолжить')
-        btn_continue.Bind(EVT_BUTTON, self.on_continue)
-        btn_exit = Button(panel, label='Выход')
-        btn_exit.Bind(EVT_BUTTON, self.on_exit)
-        hbox = BoxSizer(HORIZONTAL)
-        hbox.Add(btn_continue, 0, ALL, 10)
-        hbox.Add(btn_exit, 0, ALL, 10)
+        btn_continue = wx.Button(panel, label='Продолжить')
+        btn_continue.Bind(wx.EVT_BUTTON, self.on_continue)
+        btn_exit = wx.Button(panel, label='Выход')
+        btn_exit.Bind(wx.EVT_BUTTON, self.on_exit)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(btn_continue, 0, wx.ALL, 10)
+        hbox.Add(btn_exit, 0, wx.ALL, 10)
 
-        vbox.Add(hbox, 0, ALIGN_CENTER)
+        vbox.Add(hbox, 0, wx.ALIGN_CENTER)
         panel.SetSizer(vbox)
 
         self.SetSize((400, 150))
         self.Centre()
 
     def on_continue(self, event):
-        self.EndModal(ID_OK)
+        self.EndModal(wx.ID_OK)
 
     def on_exit(self, event):
-        self.EndModal(ID_CANCEL)
+        self.EndModal(wx.ID_CANCEL)
 
 
 def single_instance():
@@ -43,7 +44,7 @@ def single_instance():
         dialog = InfoDialog(None, 'Приложение уже открыто', message='Приложение уже открыто или было завершено неккоректно!')
         result = dialog.ShowModal()
         dialog.Destroy()
-        if result == ID_CANCEL:
+        if result == wx.ID_CANCEL:
             exit()
     else:
         write(lock_fd, str(getpid()).encode())

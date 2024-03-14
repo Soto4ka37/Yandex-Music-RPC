@@ -17,8 +17,8 @@ def is_active(driver):
 
 def get_token() -> str:
     capabilities = DesiredCapabilities.CHROME
-    capabilities['loggingPrefs'] = {'performance': 'ALL'}
-    capabilities['goog:loggingPrefs'] = {'performance': 'ALL'}
+    capabilities['loggingPrefs'] = {'performance': 'wx.ALL'}
+    capabilities['goog:loggingPrefs'] = {'performance': 'wx.ALL'}
     driver = webdriver.Chrome(desired_capabilities=capabilities,
                             executable_path=ChromeDriverManager().install())
     driver.get(

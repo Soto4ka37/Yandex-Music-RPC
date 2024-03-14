@@ -1,7 +1,7 @@
-from yandex_music import Client, Track, Album, exceptions
+from yandex_music import Client, Track, Album, exceptions, QueueItem
 from traceback import format_exc
 
-from modules.data import data, Token
+from modules.data import Token
 from modules.debugger import debugger
 
 class CritErr(Exception):
@@ -34,22 +34,30 @@ class ShortTrack():
         self.minutes = (duration // 60000)
         self.seconds = (duration // 1000) % 60
 
-class Music:
+class YandexResponse:
+    def __init__(self, queue_item: QueueItem) -> None:
+        self.description = queue_item.context.description
+        self.type = queue_item.context.type 
+        if self.type == 'radio':
+            self.queue_index = 0
+            self.queue_len = '∞'
+            self.track = None
+            self.last = None
+            return
+        queue = queue_item.fetch_queue()
+
+        self.queue_index = queue.current_index+1
+        self.queue_len = len(queue.tracks)
+        
+        track = queue.get_current_track()
+        
+        self.last = track.track_id
+        self.track = ShortTrack(track.fetch_track())
+
+class ApiClient:
     def __init__(self) -> None:
-        self.client = self.get_yandex_client()
-        self.clear()
-
-    def clear(self):
-        self.track = None
         self.last = None
-        self.queue_len = None
-        self.queue_index = None
-        self.description = None
-        self.autoupdate = None
-        self.type = None
-
-    def stop_autoupdate(self):
-        self.autoupdate = False  
+        self.client = self.get_yandex_client()
 
     def update(self):
         try:
@@ -58,32 +66,22 @@ class Music:
                 debugger.addInfo('Для текущего акккаунта нет активных очередей.')
                 raise CritErr('Для текущего акккаунта нет активных очередей.')
             
-            queue = queue_list.pop(0).fetch_queue()
-             
-            self.queue_len = len(queue.tracks)
-            self.queue_index = queue.current_index+1
-            self.description = queue.context.description
-            self.type = queue.context.type 
+            queue_item = queue_list.pop(0)
 
-            # Если очередь пуста программа предплагает, что пользователь слушает поток
-            if self.queue_len == 0:
-                self.queue_len = '∞'
-                self.track = None
-                self.last = None
-                return
-            
-            track = queue.get_current_track()
-
-            if track.track_id == self.last:
-                return
-            
-            self.last = track.track_id
-
-            self.track = ShortTrack(track.fetch_track())
+            if not queue_item:
+                debugger.addWarning('Не удалось получить очередь.')
+                return None
 
         except exceptions.TimedOutError:
             debugger.addWarning('TimedOut: Яндекс слишком долго на запрос.')
-            self.update()
+            return None
+        
+        except exceptions.NotFoundError:
+            debugger.addWarning('NotFound: Яндекс вернул код 404')
+            return None
+    
+        return YandexResponse(queue_item=queue_item)
+
         
     def get_yandex_client(self):
         token = Token()
@@ -101,4 +99,4 @@ class Music:
         return client
     
 
-api = Music()
+api2 = ApiClient()
