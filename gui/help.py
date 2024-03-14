@@ -43,6 +43,6 @@ class Help(wx.Frame):
         self.Centre()
         self.Show()
 
-    def close(self):
+    def close(self, Event: wx.Event):
         gui.help = None
         self.Destroy()
