@@ -87,32 +87,32 @@ if not path.exists(CACHE_DIR):
 if not path.exists(NO_ICON):
     NO_ICON = path.join(CACHE_DIR, 'no.png')
     if not path.exists(NO_ICON):
-        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/no.png', path=NO_ICON)
+        download(url='https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/no.png', path=NO_ICON)
 
 if not path.exists(OLD_ICON):
     OLD_ICON = path.join(CACHE_DIR, 'old.png')
     if not path.exists(OLD_ICON):
-        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/old.png', path=OLD_ICON)
+        download(url='https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/old.png', path=OLD_ICON)
 
 if not path.exists(NEW_ICON):
     NEW_ICON = path.join(CACHE_DIR, 'new.png')
     if not path.exists(NEW_ICON):
-        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/new.png', path=NEW_ICON)
+        download(url='https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/new.png', path=NEW_ICON)
 
 if not path.exists(WAVE_ICON):
     WAVE_ICON = path.join(CACHE_DIR, 'wave.png')
     if not path.exists(WAVE_ICON):
-        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/wave.png', path=WAVE_ICON)
+        download(url='https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/wave.png', path=WAVE_ICON)
 
 if not path.exists(PNG_LOGO):
     PNG_LOGO = path.join(CACHE_DIR, 'logo.png')
     if not path.exists(PNG_LOGO):
-        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/logo.png', path=PNG_LOGO)
+        download(url='https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/logo.png', path=PNG_LOGO)
 
 if not path.exists(LOGO):
     LOGO = path.join(CACHE_DIR, 'logo.ico')
     if not path.exists(LOGO):
-        download(url='https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/logo.ico', path=LOGO)
+        download(url='https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/logo.ico', path=LOGO)
 
 if not path.exists(TOKEN_FILE):
     set_key(TOKEN_FILE, 'TOKEN', '0')

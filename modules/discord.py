@@ -56,16 +56,16 @@ class RPC:
     def confirm_settings(self):
         if data.logo:
             if data.logo == 2:
-                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/github/new-black.png'
+                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/github/new-black.png'
             else:
-                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/github/old-black.png'
+                self.logo = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/github/old-black.png'
         else:
             self.logo = None
 
         if data.animate_wave:
-            self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/github/wave.gif'
+            self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/github/wave.gif'
         else:
-            self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/master/Yandex-Music-RPC/assets/wave.png'
+            self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/wave.png'
             
         self.track_buttons = []
         if data.track.button.show_first:
