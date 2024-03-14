@@ -34,11 +34,11 @@ class YesNoDialog(wx.Dialog):
         
     def on_yes(self, event):
         self.answer = True
-        self.Close()
+        self.Destroy()
         
     def on_no(self, event):
         self.answer = False
-        self.Close()
+        self.Destroy()
 
 class Settings(wx.Frame):
     def __init__(self, parent):

@@ -39,7 +39,7 @@ class Warning(wx.Dialog):
 
     def on_yes(self, event):
         self.answer = True
-        self.Close()
+        self.Destroy()
 
 from os import getenv, path, makedirs
 from json import dump, load

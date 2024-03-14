@@ -1,16 +1,17 @@
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
-# Проект ещё не готов
-> Старая версия -> https://github.com/Soto4ka37/Yandex-Music-RPC-Lite
+# Yandex Music RPC
+Яндекс Музыка в Discord (Дискорд) статусе.
+
+# Ссылки
+- [**Скачать**](https://github.com/Soto4ka37/Yandex-Music-RPC/releases/latest)
+- [Старый репозиторий](https://github.com/Soto4ka37/Yandex-Music-RPC-Lite)
+- [Сообщить об ошибке](https://github.com/Soto4ka37/Yandex-Music-RPC/issues/)
+## Основная информация
+- **Работает без платной подписки на Яндекс Музыку**
+- Глубокая настройка статуса и кнопок
+- Поддержка фонового режима
+
+## Ограничения
+- Определение точной позиции плеера, паузы и текущего трека при прослушивании "Волны" в настоящий момент невозможно из-за ограничений API
+
+## Дополнительно
+- [Автор идеи](https://zelenka.guru/threads/4728759)
