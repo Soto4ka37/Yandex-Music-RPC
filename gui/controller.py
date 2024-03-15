@@ -7,5 +7,6 @@ class GUI:
         self.button_editor = None
         self.status_editor = None
         self.help = None
-         
+
+
 gui = GUI()

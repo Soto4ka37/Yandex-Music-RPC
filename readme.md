@@ -1,8 +1,8 @@
 # Yandex Music RPC
 Яндекс Музыка в Discord (Дискорд) статусе.
 
-# Ссылки
-- [**Скачать**](https://github.com/Soto4ka37/Yandex-Music-RPC/releases/latest)
+## Ссылки
+- [**Скачать последнюю версию**](https://github.com/Soto4ka37/Yandex-Music-RPC/releases/latest)
 - [Старый репозиторий](https://github.com/Soto4ka37/Yandex-Music-RPC-Lite)
 - [Сообщить об ошибке](https://github.com/Soto4ka37/Yandex-Music-RPC/issues/)
 ## Основная информация

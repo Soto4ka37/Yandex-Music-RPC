@@ -1,9 +1,12 @@
 import requests
 import sys
 from webbrowser import open as openWeb
+from traceback import format_exc
+
 from modules.debugger import debugger
 from modules.data import VERSION
-from gui.settings import YesNoDialog
+
+from gui.func import YesNoDialog
 
 def check_versions(old: str, new: str) -> bool:
     def normalize(v):
@@ -24,7 +27,6 @@ def check_versions(old: str, new: str) -> bool:
     else:
         return False
 
-
 def check_updates():
     try:
         response = requests.get("https://api.github.com/repos/Soto4ka37/Yandex-Music-RPC/releases/latest", timeout=10)
@@ -37,5 +39,6 @@ def check_updates():
                 if dialog.answer:
                     openWeb("https://github.com/Soto4ka37/Yandex-Music-RPC/releases/latest")
                     sys.exit()
-    except:
-        debugger.addError('Не удалось проверить обновления!')
+    except Exception as e:
+        debugger.addError(f'Не удалось проверить обновления! Исключение {str(e)}')
+        debugger.addError(format_exc())

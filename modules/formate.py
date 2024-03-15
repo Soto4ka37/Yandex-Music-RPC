@@ -1,7 +1,7 @@
 from modules.data import VERSION
 from modules.yandex import YandexResponse
 
-def cut_string(string: str, max: int) -> str | None:
+def cut_string(string: str, max: int) -> str:
     if len(string) > max:
         return string[:max-2] + '..'
     else:
@@ -9,12 +9,12 @@ def cut_string(string: str, max: int) -> str | None:
 
 def edit(string: str, replace: str, to: str):
     return string.replace(replace, str(to))
-    
-def formate_string(string: str, response: YandexResponse) -> str | None:
+
+def formate_string(string: str, response: YandexResponse) -> str:
     if not string:
         return None
-    
-    string = edit(string, '%ver%', str(VERSION)) # Версия программы   
+
+    string = edit(string, '%ver%', str(VERSION)) # Версия программы
     string = edit(string, '%queue-len%', str(response.queue_index)) # Номер текущего трека в очереди
     string = edit(string, '%queue-count%', str(response.queue_len)) # Число треков в очереди
     string = edit(string, '%description%', str(response.description)) # Название потока
@@ -31,6 +31,4 @@ def formate_string(string: str, response: YandexResponse) -> str | None:
         string = edit(string, '%album-url%', str(album.url)) # Ссылка на альбом
         string = edit(string, '%album-len%', str(album.count)) # Количество треков в альбоме
 
-    string = cut_string(string, 96) # Лимит 96 символов
-    return string
-        
+    return cut_string(string, 96) # Лимит 96 символов

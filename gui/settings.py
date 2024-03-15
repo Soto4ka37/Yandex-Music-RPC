@@ -1,44 +1,14 @@
 import wx
 
+from modules.discord import rpc
+from modules.data import LOGO, data
+
+from gui.func import YesNoDialog, CustomIcon
 from gui.controller import gui
 from gui.debug import DebugWindow
 from gui.status_editor import StatusEditor
 from gui.buttons_editor import ButtonEditor
-from modules.discord import rpc
-from modules.data import LOGO, data
 
-class YesNoDialog(wx.Dialog):
-    def __init__(self, parent, title, message):
-        super(YesNoDialog, self).__init__(parent, title=title, size=(300, 110))
-        self.SetIcon(wx.Icon(LOGO)) 
-        panel = wx.Panel(self)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        
-        message_label = wx.StaticText(panel, label=message)
-        vbox.Add(message_label, flag=wx.ALL|wx.EXPAND, border=10)
-        
-        buttonbox = wx.BoxSizer(wx.HORIZONTAL)
-        yes_button = wx.Button(panel, label='Да')
-        yes_button.Bind(wx.EVT_BUTTON, self.on_yes)
-        buttonbox.Add(yes_button, flag=wx.ALL|wx.EXPAND, border=5)
-        
-        no_button = wx.Button(panel, label='Нет')
-        no_button.Bind(wx.EVT_BUTTON, self.on_no)
-        buttonbox.Add(no_button, flag=wx.ALL|wx.EXPAND, border=5)
-        
-        vbox.Add(buttonbox, flag=wx.ALIGN_CENTER)
-        
-        panel.SetSizer(vbox)
-        
-        self.answer = None
-        
-    def on_yes(self, event):
-        self.answer = True
-        self.Destroy()
-        
-    def on_no(self, event):
-        self.answer = False
-        self.Destroy()
 
 class Settings(wx.Frame):
     def __init__(self, parent):
@@ -64,7 +34,7 @@ class Settings(wx.Frame):
         wx.StaticText(tab3, label='Журнал отладки', pos=(5, 3)).SetFont(big)
 
         wx.StaticLine(tab3, wx.ID_ANY, pos=(0, 30), size=(300, 1), style=wx.LI_HORIZONTAL)
-    
+
         button = wx.Button(tab3, label='Открыть журнал отладки', pos=(10, 40), size=(245, 40))
         button.Bind(wx.EVT_BUTTON, self.open_debug)
 
@@ -88,7 +58,7 @@ class Settings(wx.Frame):
         wx.StaticText(tab1, label='Быстродействие', pos=(5, 83)).SetFont(big)
 
         wx.StaticLine(tab1, wx.ID_ANY, pos=(0, 110), size=(300, 1), style=wx.LI_HORIZONTAL)
-    
+
         update_icon = wx.CheckBox(tab1, label='- Предпросмотр трека (?)', pos=(10, 120))
         update_icon.SetValue(data.update_icon)
         update_icon.SetToolTip(wx.ToolTip('Обновлять иконку трека в приложении (Не влияет на статус)'))
@@ -133,7 +103,7 @@ class Settings(wx.Frame):
         button = wx.Button(tab2, label='Кнопки', pos=(135, 35), size=(125, 40))
         button.Bind(wx.EVT_BUTTON, self.open_buttons_editor)
 
-            # - Трек
+        # - Трек
 
         wx.StaticLine(tab2, wx.ID_ANY, pos=(0, 80), size=(300, 1), style=wx.LI_HORIZONTAL)
 
@@ -164,7 +134,7 @@ class Settings(wx.Frame):
         self.track_timer3.Disable()
 
         self.set_track_default_value()
-            # - Поток
+        # - Поток
         wx.StaticLine(tab2, wx.ID_ANY, pos=(0, 180), size=(300, 1), style=wx.LI_HORIZONTAL)
 
         wx.StaticText(tab2, label='Поток', pos=(5, 183)).SetFont(big)
@@ -300,5 +270,4 @@ class Settings(wx.Frame):
     def request_spin(self, event: wx.Event):
         data.request = event.GetEventObject().GetValue()
         data.save()
-        rpc.reload()
- 
+        rpc.reload() 

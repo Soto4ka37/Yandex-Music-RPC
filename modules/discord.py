@@ -11,16 +11,16 @@ from modules.debugger import debugger
 from modules.formate import cut_string
 from pypresence.exceptions import PipeClosed
 
-from re import compile, IGNORECASE, match
+import re
 
 def is_url(string: str):
-    url_pattern = compile(
+    url_pattern = re.compile(
         r'^(?:http)s?://'
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' 
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
         r'(?::\d+)?'
-        r'(?:/?|[/?]\S+)$', IGNORECASE)
-    return match(url_pattern, string) is not None
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return re.match(url_pattern, string) is not None
 
 class RPC:
     def __init__(self) -> None:
@@ -66,7 +66,7 @@ class RPC:
             self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/github/wave.gif'
         else:
             self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/wave.png'
-            
+ 
         self.track_buttons = []
         if data.track.button.show_first:
             if is_url(data.track.button.url_first) or data.track.button.url_first == '%track-url%' and data.track.button.label_first:
@@ -143,7 +143,7 @@ class RPC:
                 state = formate_string(track.state, response=resp)
                 large = formate_string(track.large, response=resp)
                 small = formate_string(track.small, response=resp)
-                
+
                 if self.track_buttons:
                     for button in self.track_buttons:
                         if button.get('url') == '%track-url%':
@@ -191,7 +191,7 @@ class RPC:
                             large_text=large,
                             small_text=small,
                 )
-    
+
                 elif track.timer == 2:
                     repeat = data.repeat
                     if self.now != 'r': 
@@ -201,7 +201,7 @@ class RPC:
                             state = formate_string(repeat.state, response=resp)
                             large = formate_string(repeat.large, response=resp)
                             small = formate_string(repeat.small, response=resp)
-                            debugger.addSuccess(f'Переход в режим повтора')
+                            debugger.addSuccess('Переход в режим повтора')
 
                             if self.repeat_buttons:
                                 for button in self.repeat_buttons:
@@ -229,10 +229,10 @@ class RPC:
                 self.client.clear()
                 self.now = 'c'
                 return
-            
+
             if self.last_description == resp.description:
                 return 
-            
+
             self.last_description = resp.description
 
             if data.wave.timer:
@@ -246,7 +246,7 @@ class RPC:
             large = formate_string(wave.large, response=resp)
             small = formate_string(wave.small, response=resp)
 
-        
+
             self.client.update(
                 state=state,
                 start=self.last_timer,
@@ -263,12 +263,12 @@ class RPC:
             gui.main.set_title(details)
             gui.main.set_author(state)
             gui.main.set_icon(WAVE_ICON, name='wave.png')
-            
+
     def remove(self):
         self.reload()
         if self.client:
             try: self.client.close()
-            except: pass 
+            except: pass
             self.client = None
 
     def reload(self):
@@ -277,5 +277,6 @@ class RPC:
         self.last_description = None
         self.last_timer = None
         self.last_track_id = None
+
 
 rpc = RPC()

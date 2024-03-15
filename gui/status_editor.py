@@ -1,16 +1,9 @@
 import wx
-from PIL import Image
-
-def CustomIcon(frame, *, path, size, pos):
-    img = Image.open(path)
-    img.thumbnail(size)
-    wx_image = wx.Image(img.width, img.height)
-    wx_image.SetData(img.convert('RGB').tobytes())
-    return wx.StaticBitmap(frame, bitmap=wx_image.ConvertToBitmap(), pos=pos)
 
 from modules.data import data, LOGO, NO_ICON, NEW_ICON, OLD_ICON
 from modules.discord import rpc
 
+from gui.func import CustomIcon
 from gui.controller import gui
 from gui.help import Help
 
@@ -71,7 +64,7 @@ class StatusEditor(wx.Frame):
         self.track_small = wx.TextCtrl(self.panel, pos=(5, 255), size=(280, 20))
         wx.StaticText(self.panel, pos=(290, 257), label='Логотип')
         self.track_small.SetValue(data.track.small)
-        
+
         # Повтор
         wx.StaticLine(self.panel, wx.ID_ANY, pos=(0, 280), size=(400, 1), style=wx.LI_HORIZONTAL)
 
@@ -132,7 +125,7 @@ class StatusEditor(wx.Frame):
         if gui.help.IsIconized():
             gui.help.Restore()
         gui.help.SetFocus()
-    
+
     def set_logo_default_value(self):
         if data.logo == 0:
             self.wave_small.Disable()
@@ -175,7 +168,7 @@ class StatusEditor(wx.Frame):
         data.repeat.state = self.repeat_state.GetValue()
         data.repeat.large = self.repeat_large.GetValue()
         data.repeat.small = self.repeat_small.GetValue()
-        
+
         data.wave.details = self.wave_details.GetValue()
         data.wave.state = self.wave_state.GetValue()
         data.wave.large = self.wave_large.GetValue()

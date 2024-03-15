@@ -16,6 +16,7 @@ from modules.data import data, VERSION, LOGO, CACHE_DIR, PNG_LOGO
 from modules.yandex import api2
 from modules.discord import rpc
 
+from pypresence import exceptions as presense_exc
 class MainWindow(wx.Frame):
     def __init__(self, parent = None):
         wx.Frame.__init__(self, parent, title=f'RPC {VERSION}', size=(450, 130), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
@@ -41,7 +42,7 @@ class MainWindow(wx.Frame):
 
         self.title = wx.StaticText(self.panel, label='Отлючено', pos=(95, 43))
         self.author = wx.StaticText(self.panel, label='', pos=(95, 60))
-        
+
         self.icon = wx.StaticBitmap(self.panel, bitmap=wx.NullBitmap, pos=(5, 5))
         self.set_icon(PNG_LOGO, name='logo.png', force=True)
 
@@ -52,7 +53,7 @@ class MainWindow(wx.Frame):
                 self.SetPosition((data.exit_position_x, data.exit_position_y))
         else:
             self.Centre()
-        
+
         for widget in (self.panel, self.title, self.author, self.icon, self.line):
             widget.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
             widget.Bind(wx.EVT_LEFT_UP, self.on_left_up)
@@ -67,7 +68,7 @@ class MainWindow(wx.Frame):
         while self.dragging:
             self.SetPosition(wx.GetMousePosition() - click_pos)
             sleep(0.01)
-            
+
     def on_left_down(self, event: wx.Event = None):
         if not self.dragging:
             self.dragging = True
@@ -133,12 +134,12 @@ class MainWindow(wx.Frame):
 
         try:
             rpc.create()
-        except:
+        except presense_exc.DiscordNotFound:
             self.force_disconnect('Не удалось установить соединение с Discord RPC', False)
             debugger.addError(format_exc())
             self.checkbox.Enable()
             return # Если не удалось подключиться к Discord RPC
-        
+
         try:
             rpc.update()
         except Exception as e:
@@ -147,7 +148,7 @@ class MainWindow(wx.Frame):
             debugger.addError(format_exc())
             self.checkbox.Enable()
             return # Если не удалось обновнить статус
-        
+
         if self.autoudate and self.autoudate.is_alive():
             while self.autoudate.is_alive():
                 self.set_author('Ожидание завершения предыдущего потока')
@@ -197,7 +198,6 @@ class MainWindow(wx.Frame):
         self.Hide()
         self.tray_icon.ShowBalloon(f'RPC {VERSION} всё ещё работает!', 'Приложение было скрыто в трей. Щёлкните по иконке что бы открыть его снова.')
 
-
     def set_title(self, text: str = None):
         if text:
             self.title.SetLabelText(text)
@@ -213,7 +213,7 @@ class MainWindow(wx.Frame):
     def set_icon(self, path_or_url: str, name: str, force: bool = False):
         if not data.update_icon and not force:
             return
-        
+
         if 'https://' in path_or_url or 'http://' in path_or_url:
             cache_image = path.join(CACHE_DIR, name)
             if not path.exists(cache_image):

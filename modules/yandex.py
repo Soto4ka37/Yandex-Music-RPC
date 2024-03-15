@@ -24,7 +24,7 @@ class ShortTrack():
         self.authors = self.artists = ', '.join(track.artists_name())
         self.icon_low = 'https://' + track.cover_uri.replace('%%', '200x200')
         self.icon_high = 'https://' + track.cover_uri.replace('%%', '1000x1000')
-        
+
         self.url = self.link = f'https://music.yandex.ru/track/{track.id}/'
 
         self.albums = [ShortAlbum(album) for album in track.albums]
@@ -37,7 +37,7 @@ class ShortTrack():
 class YandexResponse:
     def __init__(self, queue_item: QueueItem) -> None:
         self.description = queue_item.context.description
-        self.type = queue_item.context.type 
+        self.type = queue_item.context.type
         if self.type == 'radio':
             self.queue_index = 0
             self.queue_len = '∞'
@@ -48,9 +48,9 @@ class YandexResponse:
 
         self.queue_index = queue.current_index+1
         self.queue_len = len(queue.tracks)
-        
+
         track = queue.get_current_track()
-        
+
         self.last = track.track_id
         self.track = ShortTrack(track.fetch_track())
 
@@ -65,7 +65,7 @@ class ApiClient:
             if not queue_list:
                 debugger.addInfo('Для текущего акккаунта нет активных очередей.')
                 raise CritErr('Для текущего акккаунта нет активных очередей.')
-            
+
             queue_item = queue_list.pop(0)
 
             if not queue_item:
@@ -75,14 +75,13 @@ class ApiClient:
         except exceptions.TimedOutError:
             debugger.addWarning('TimedOut: Яндекс слишком долго на запрос.')
             return None
-        
+
         except exceptions.NotFoundError:
             debugger.addWarning('NotFound: Яндекс вернул код 404')
             return None
-    
+
         return YandexResponse(queue_item=queue_item)
 
-        
     def get_yandex_client(self):
         token = Token()
         try:
@@ -97,6 +96,6 @@ class ApiClient:
             client = Client(token).init()
         debugger.addInfo(f'Успешная авторизация! Подписка на плюс {"АКТИВНА" if client.accountStatus().plus.has_plus else "НЕАКТИВНА"}.')
         return client
-    
+
 
 api2 = ApiClient()

@@ -1,7 +1,7 @@
-import wx 
+import wx
 from wx.richtext import RichTextCtrl
 
-from re import compile, sub, DOTALL
+import re
 from modules.debugger import debugger
 from gui.controller import gui
 from modules.data import LOGO
@@ -35,24 +35,24 @@ class DebugWindow(wx.Frame):
 
         self.Bind(wx.EVT_CLOSE, self.close)
         self.set_text()
-        
+
         self.Centre()
         self.Show()
-    
+
     def close(self, event):
         gui.debug = None
         self.Destroy()
 
     def set_text(self, event = None):
-        pattern = compile(r'<(inf|warn|suc|err)>(.*?)<\/\1>', DOTALL)
+        pattern = re.compile(r'<(inf|warn|suc|err)>(.*?)<\/\1>', re.DOTALL)
 
         debug = debugger.getStr()
         matches = pattern.findall(debug)
         self.rtc.Clear()
-        
+
         for match in matches:
             tag, text = match
-            text = sub(r'<\/?\w+>', '', text)
+            text = re.sub(r'<\/?\w+>', '', text)
             if tag == 'inf':
                 self.rtc.BeginTextColour(wx.BLUE)
             elif tag == 'err':
@@ -62,7 +62,7 @@ class DebugWindow(wx.Frame):
             else:
                 self.rtc.BeginTextColour(wx.Colour(255, 128, 0))
             self.rtc.WriteText(text + '\n')
-            
+
     def on_copy(self, event):
         self.rtc.SelectAll()
         self.rtc.Copy()

@@ -32,7 +32,7 @@ class ButtonEditor(wx.Frame):
         self.track_show_first.SetValue(button.show_first)
 
         self.track_show_second = wx.CheckBox(self.panel, pos=(80, 80), label='Кнопка 2')
-        self.track_show_second.Bind(wx.EVT_CHECKBOX, self.show_track_second_func)        
+        self.track_show_second.Bind(wx.EVT_CHECKBOX, self.show_track_second_func)
         self.track_show_second.SetValue(button.show_second)
 
         self.track_label_first = wx.TextCtrl(self.panel, pos=(5, 105), size=(280, 20))
@@ -54,7 +54,7 @@ class ButtonEditor(wx.Frame):
         self.track_url_second = wx.TextCtrl(self.panel, pos=(5, 180), size=(280, 20))
         wx.StaticText(self.panel, pos=(290, 182), label='Ссылка 2')
         self.track_url_second.SetValue(button.url_second)
-        
+
         if not button.show_second:
             self.track_label_second.Disable()
             self.track_url_second.Disable()
@@ -72,7 +72,7 @@ class ButtonEditor(wx.Frame):
         self.repeat_show_first.SetValue(button.show_first)
 
         self.repeat_show_second = wx.CheckBox(self.panel, pos=(80, 240), label='Кнопка 2')
-        self.repeat_show_second.Bind(wx.EVT_CHECKBOX, self.show_repeat_second_func)        
+        self.repeat_show_second.Bind(wx.EVT_CHECKBOX, self.show_repeat_second_func)
         self.repeat_show_second.SetValue(button.show_second)
 
         self.repeat_label_first = wx.TextCtrl(self.panel, pos=(5, 265), size=(280, 20))
@@ -112,7 +112,7 @@ class ButtonEditor(wx.Frame):
         self.wave_show_first.SetValue(button.show_first)
 
         self.wave_show_second = wx.CheckBox(self.panel, pos=(80, 400), label='Кнопка 2')
-        self.wave_show_second.Bind(wx.EVT_CHECKBOX, self.show_wave_second_func)        
+        self.wave_show_second.Bind(wx.EVT_CHECKBOX, self.show_wave_second_func)
         self.wave_show_second.SetValue(button.show_second)
 
         self.wave_label_first = wx.TextCtrl(self.panel, pos=(5, 425), size=(280, 20))

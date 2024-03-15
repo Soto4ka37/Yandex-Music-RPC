@@ -1,7 +1,7 @@
 import wx
 
 from os import O_CREAT, O_EXCL, O_RDWR, getpid, write, close, unlink, remove, open as os_open
-from sys import exit
+import sys
 
 from modules.data import LOCK_FILE, LOGO
 
@@ -45,7 +45,7 @@ def single_instance():
         result = dialog.ShowModal()
         dialog.Destroy()
         if result == wx.ID_CANCEL:
-            exit()
+            sys.exit()
     else:
         write(lock_fd, str(getpid()).encode())
         close(lock_fd)

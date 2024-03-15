@@ -1,11 +1,20 @@
 VERSION = 'v1.3'
 
 import wx
+import sys
+
+from os import getenv, path, makedirs
+from json import dump, load
+from dotenv import dotenv_values, set_key
+from requests import get
+
+from modules.token.wx import get_token as wx_t
+from modules.token.chrome import get_token as cr_t
 
 class Warning(wx.Dialog):
     def __init__(self, parent):
         super(Warning, self).__init__(parent, title=f'Спасибо за установку YM-RPC {VERSION}', size=(400, 270))
-        self.SetIcon(wx.Icon(LOGO)) 
+        self.SetIcon(wx.Icon(LOGO))
         panel = wx.Panel(self)
         
         panel_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -23,16 +32,16 @@ class Warning(wx.Dialog):
 Также на некоторых аккаунтах скрипт может не работать ПОЛНОСТЬЮ.'''
         static_text = wx.StaticText(panel, label=text)
         panel_sizer.Add(static_text, 0, wx.ALL, 5)
-        
+
         panel_sizer.Add((0, 0), 1, wx.EXPAND)
-        
+
         yes_button = wx.Button(panel, label='Перейти к авторизации')
         yes_button.Bind(wx.EVT_BUTTON, self.on_yes)
         yes_button.SetMinSize((yes_button.GetSize()[0], 40))
-        
+
         panel_sizer.Add(yes_button, 0, wx.EXPAND|wx.ALL, 5)
         panel.SetSizer(panel_sizer)
-        
+
         self.answer = None
         self.Centre()
         self.ShowModal()
@@ -41,23 +50,14 @@ class Warning(wx.Dialog):
         self.answer = True
         self.Destroy()
 
-from os import getenv, path, makedirs
-from json import dump, load
-from dotenv import dotenv_values, set_key
-from requests import get
-
-from modules.token.wx import get_token as wx_t
-from modules.token.chrome import get_token as cr_t
-
 def download(*, url: str, path: str):
     response = get(url)
     with open(path, 'wb') as file:
         file.write(response.content)
 
+
 APPDATA = getenv('APPDATA')
 APP_DIR = path.join(APPDATA, 'YM-RPC-Reloaded')
-
-# --------
 
 LOCK_FILE = path.join(APP_DIR, 'working')
 DATA_FILE = path.join(APP_DIR, 'data.json')
@@ -65,8 +65,6 @@ TOKEN_FILE = path.join(APP_DIR, 'secret.env')
 LOG_FILE = path.join(APP_DIR, 'latest.log')
 
 CACHE_DIR = path.join(APP_DIR, 'cache')
-
-# -------- 
 
 ASSETS_DIR = 'assets'
 
@@ -120,7 +118,7 @@ if not path.exists(TOKEN_FILE):
 if not path.exists(DATA_FILE):
     with open(DATA_FILE, 'w') as file:
         dump({}, file)
-        
+
 class Token:
     def __init__(self):
         self.token = self._load()
@@ -129,15 +127,15 @@ class Token:
             if warn.answer:
                 self.token = self._get_token()
                 if not self.token or len(self.token) < 4:
-                    exit()
+                    sys.exit()
                 else:
                     self._save()
             else:
-                exit()
-                
+                sys.exit()
+    
     def __str__(self) -> str:
         return self.token
-    
+
     def _save(self) -> None:
         set_key(TOKEN_FILE, 'TOKEN', self.token)
 
@@ -150,7 +148,7 @@ class Token:
         if not token or len(token) < 4:
             token = cr_t()
         return token
-    
+
     def reset(self):
         self.token = '0'
         self._save()
@@ -197,9 +195,40 @@ class Data:
         self.allow_cache: bool = data.get('allow_cache', True)
         self.request: int = data.get('request', 3)
         self.logo: int = data.get('logo', 2)
-        self.track = RPC_DATA(data.get('track', {'timer': 2, 'details': '%track-title%', 'state': '%track-authors%', 'large': '%album-title% (%album-len%)', 'small': '%queue-len% из %queue-count%', 'button': {'show_first': True, 'label_first': 'Слушать', 'url_first': '%track-url%'}}))
-        self.repeat = RPC_DATA(data.get('repeat', {'timer': 0, 'details': '%track-title%', 'state': '%track-authors%', 'large': '%album-title% (%album-len%)', 'small': 'Трек повторяется', 'button': {'show_first': True, 'label_first': 'Слушать', 'url_first': '%track-url%'}}))
-        self.wave = RPC_DATA(data.get('wave', {'timer': 1, 'details': 'Поток "%description%"', 'state': '', 'large': ' %description%', 'small': 'Яндекс Музыка'}))
+        self.track = RPC_DATA(data.get('track', {
+            "timer": 2,
+            "details": "%track-title%",
+            "state": "%track-authors%",
+            "large": "%album-title% (%album-len%)",
+            "small": "%queue-len% из %queue-count%",
+            "button": {
+                "show_first": True,
+                "label_first": "Слушать",
+                "url_first": "%track-url%"
+            }
+        }))
+
+        self.repeat = RPC_DATA(data.get('repeat', {
+            "timer": 2,
+            "details": "%track-title%",
+            "state": "%track-authors%",
+            "large": "%album-title% (%album-len%)",
+            "small": "%queue-len% из %queue-count%",
+            "button": {
+                "show_first": True,
+                "label_first": "Слушать",
+                "url_first": "%track-url%"
+            }
+        }))
+
+        self.wave = RPC_DATA(data.get('wave', {
+            "timer": 1,
+            "details": "Поток \"%description%\"",
+            "state": "",
+            "large": "%description%",
+            "small": "Яндекс Музыка"
+        }))
+
         self.exit_position_x = data.get('exit_position_x', None)
         self.exit_position_y = data.get('exit_position_y', None)
         self.animate_wave = data.get('animate_wave', True)
@@ -263,5 +292,6 @@ class Data:
         }
         with open(DATA_FILE, 'w') as file:
             dump(data, file)
+
 
 data = Data()
