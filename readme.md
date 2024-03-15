@@ -1,5 +1,5 @@
 # Yandex Music RPC
-Яндекс Музыка в Discord (Дискорд) статусе.
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e558d7c7a5f54c2bb622e0579aef337a)](https://app.codacy.com/gh/Soto4ka37/Yandex-Music-RPC/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ## Ссылки
 - [**Скачать последнюю версию**](https://github.com/Soto4ka37/Yandex-Music-RPC/releases/latest)
