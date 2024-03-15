@@ -40,9 +40,7 @@ def get_token() -> str:
             if url_fragment:
                 token = url_fragment.split('&')[0].split('=')[1]
 
-    try:
-        driver.close()
-    except:
-        pass
+    try: driver.close()
+    except: pass
 
     return token

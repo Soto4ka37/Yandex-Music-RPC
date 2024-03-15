@@ -150,7 +150,7 @@ class Token:
         return token
 
     def reset(self):
-        self.token = '0'
+        self.token = None
         self._save()
 
     def update(self):

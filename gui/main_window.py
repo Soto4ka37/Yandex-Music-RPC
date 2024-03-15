@@ -1,6 +1,6 @@
 import wx
 from wx.adv import TaskBarIcon, EVT_TASKBAR_LEFT_DOWN, EVT_TASKBAR_RIGHT_DOWN
-from requests import get
+import requests
 from io import BytesIO
 from PIL import Image
 from threading import Thread
@@ -214,24 +214,30 @@ class MainWindow(wx.Frame):
         if not data.update_icon and not force:
             return
 
-        if 'https://' in path_or_url or 'http://' in path_or_url:
-            cache_image = path.join(CACHE_DIR, name)
-            if not path.exists(cache_image):
-                response = get(path_or_url)
-                image_data = response.content
-                if data.allow_cache:
-                    with open(cache_image, 'wb') as file:
-                        file.write(image_data) # Кешируем картинку
+        try:
+            if 'https://' in path_or_url or 'http://' in path_or_url:
+                cache_image = path.join(CACHE_DIR, name)
+                if not path.exists(cache_image):
+                    response = requests.get(path_or_url, timeout=3)
+                    image_data = response.content
+                    if data.allow_cache:
+                        with open(cache_image, 'wb') as file:
+                            file.write(image_data) # Кешируем картинку
 
-                img = Image.open(BytesIO(image_data))
+                    img = Image.open(BytesIO(image_data))
+                else:
+                    img = Image.open(cache_image)
             else:
-                img = Image.open(cache_image)
-        else:
-            img = Image.open(path_or_url)
-        img.thumbnail((80, 80))
-        wx_image = wx.Image(img.width, img.height)
-        wx_image.SetData(img.convert('RGB').tobytes())
-        self.icon.SetBitmap(wx_image.ConvertToBitmap())
+                img = Image.open(path_or_url)
+            img.thumbnail((80, 80))
+            wx_image = wx.Image(img.width, img.height)
+            wx_image.SetData(img.convert('RGB').tobytes())
+            self.icon.SetBitmap(wx_image.ConvertToBitmap())
+
+        except requests.Timeout:
+            self.set_icon(PNG_LOGO, name='logo.png', force=True)
+        except requests.RequestException:
+            self.set_icon(PNG_LOGO, name='logo.png', force=True)
 
     def open_settings(self, event: wx.Event):
         if not gui.settings:

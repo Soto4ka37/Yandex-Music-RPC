@@ -3,12 +3,11 @@ import wx
 from modules.discord import rpc
 from modules.data import LOGO, data
 
-from gui.func import YesNoDialog, CustomIcon
+from gui.func import YesNoDialog
 from gui.controller import gui
 from gui.debug import DebugWindow
 from gui.status_editor import StatusEditor
 from gui.buttons_editor import ButtonEditor
-
 
 class Settings(wx.Frame):
     def __init__(self, parent):

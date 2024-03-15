@@ -1,9 +1,9 @@
 from modules.data import VERSION
 from modules.yandex import YandexResponse
 
-def cut_string(string: str, max: int) -> str:
-    if len(string) > max:
-        return string[:max-2] + '..'
+def cut_string(string: str, limit: int) -> str:
+    if len(string) > limit:
+        return string[:limit-2] + '..'
     else:
         return string
 
