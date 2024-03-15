@@ -51,5 +51,7 @@ def single_instance():
         close(lock_fd)
 
 def cleanup():
-    try: unlink(LOCK_FILE); remove(LOCK_FILE)
-    except: pass
+    try:
+        unlink(LOCK_FILE); remove(LOCK_FILE)
+    except:
+        pass

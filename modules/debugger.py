@@ -13,26 +13,26 @@ class Debugger:
 
     def __str__(self) -> str:
         return self.getStr()
-    
+
     def getStr(self):
         with open(LOG_FILE, 'r') as file:
             return file.read()
-    
+
     def addError(self, message: str):
         with open(LOG_FILE, 'a') as file:
             file.write(f'<err>[{current_time_formatted()}] {message}</err>\n')
-    
+
     def addInfo(self, message: str):
         with open(LOG_FILE, 'a') as file:
             file.write(f'<inf>[{current_time_formatted()}] {message}</inf>\n')
-    
+
     def addWarning(self, message: str):
         with open(LOG_FILE, 'a') as file:
             file.write(f'<warn>[{current_time_formatted()}] {message}</warn>\n')
-    
+
     def addSuccess(self, message: str):
         with open(LOG_FILE, 'a') as file:
             file.write(f'<suc>[{current_time_formatted()}] {message}</suc>\n')
 
-    
+
 debugger = Debugger()

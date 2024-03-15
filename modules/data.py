@@ -11,12 +11,12 @@ from requests import get
 from modules.token.wx import get_token as wx_t
 from modules.token.chrome import get_token as cr_t
 
-class Warning(wx.Dialog):
+class WarningDialog(wx.Dialog):
     def __init__(self, parent):
-        super(Warning, self).__init__(parent, title=f'Спасибо за установку YM-RPC {VERSION}', size=(400, 270))
+        super(WarningDialog, self).__init__(parent, title=f'Спасибо за установку YM-RPC {VERSION}', size=(400, 270))
         self.SetIcon(wx.Icon(LOGO))
         panel = wx.Panel(self)
-        
+    
         panel_sizer = wx.BoxSizer(wx.VERTICAL)
         
         text = '''Спасибо за установку Yandex Music RPC!
@@ -123,7 +123,7 @@ class Token:
     def __init__(self):
         self.token = self._load()
         if not self.token or len(self.token) < 4:
-            warn = Warning(None)
+            warn = WarningDialog(None)
             if warn.answer:
                 self.token = self._get_token()
                 if not self.token or len(self.token) < 4:

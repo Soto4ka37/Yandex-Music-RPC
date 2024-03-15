@@ -66,7 +66,7 @@ class RPC:
             self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/github/wave.gif'
         else:
             self.wave_icon = 'https://raw.githubusercontent.com/Soto4ka37/Yandex-Music-RPC/master/assets/wave.png'
- 
+
         self.track_buttons = []
         if data.track.button.show_first:
             if is_url(data.track.button.url_first) or data.track.button.url_first == '%track-url%' and data.track.button.label_first:
@@ -174,7 +174,7 @@ class RPC:
                         state = formate_string(repeat.state, response=resp)
                         large = formate_string(repeat.large, response=resp)
                         small = formate_string(repeat.small, response=resp)
-                        debugger.addSuccess(f'Трек повторяется')
+                        debugger.addSuccess('Трек повторяется')
                         
                         if self.repeat_buttons:
                             for button in self.repeat_buttons:
@@ -267,8 +267,10 @@ class RPC:
     def remove(self):
         self.reload()
         if self.client:
-            try: self.client.close()
-            except: pass
+            try:
+                self.client.close()
+            except:
+                pass
             self.client = None
 
     def reload(self):
