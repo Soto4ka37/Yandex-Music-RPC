@@ -36,7 +36,6 @@ class InfoDialog(wx.Dialog):
     def on_exit(self, event):
         self.EndModal(wx.ID_CANCEL)
 
-
 def single_instance():
     try:
         lock_fd = os_open(LOCK_FILE, O_CREAT | O_EXCL | O_RDWR)

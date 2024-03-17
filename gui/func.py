@@ -5,7 +5,7 @@ from modules.data import LOGO
 
 class YesNoDialog(wx.Dialog):
     def __init__(self, parent, title, message):
-        super(YesNoDialog, self).__init__(parent, title=title, size=(300, 110))
+        super(YesNoDialog, self).__init__(parent, title=title, size=(375, 125))
         self.SetIcon(wx.Icon(LOGO))
         panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -25,7 +25,7 @@ class YesNoDialog(wx.Dialog):
         vbox.Add(buttonbox, flag=wx.ALIGN_CENTER)
 
         panel.SetSizer(vbox)
-
+        self.Centre()
         self.answer = None
 
     def on_yes(self, event):

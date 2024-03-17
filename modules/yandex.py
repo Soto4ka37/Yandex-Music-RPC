@@ -38,12 +38,14 @@ class YandexResponse:
     def __init__(self, queue_item: QueueItem) -> None:
         self.description = queue_item.context.description
         self.type = queue_item.context.type
+        
         if self.type == 'radio':
             self.queue_index = 0
             self.queue_len = '∞'
             self.track = None
             self.last = None
             return
+        
         queue = queue_item.fetch_queue()
 
         self.queue_index = queue.current_index+1
@@ -60,24 +62,15 @@ class ApiClient:
         self.client = self.get_yandex_client()
 
     def update(self):
-        try:
-            queue_list = self.client.queues_list()
-            if not queue_list:
-                debugger.addInfo('Для текущего акккаунта нет активных очередей.')
-                raise CritErr('Для текущего акккаунта нет активных очередей.')
+        queue_list = self.client.queues_list()
+        if not queue_list:
+            debugger.addInfo('Для текущего акккаунта нет активных очередей.')
+            raise CritErr('Для текущего акккаунта нет активных очередей.')
 
-            queue_item = queue_list.pop(0)
+        queue_item = queue_list.pop(0)
 
-            if not queue_item:
-                debugger.addWarning('Не удалось получить очередь.')
-                return None
-
-        except exceptions.TimedOutError:
-            debugger.addWarning('TimedOut: Яндекс слишком долго на запрос.')
-            return None
-
-        except exceptions.NotFoundError:
-            debugger.addWarning('NotFound: Яндекс вернул код 404')
+        if not queue_item:
+            debugger.addWarning('Не удалось получить очередь.')
             return None
 
         return YandexResponse(queue_item=queue_item)
@@ -96,6 +89,3 @@ class ApiClient:
             client = Client(token).init()
         debugger.addInfo(f'Успешная авторизация! Подписка на плюс {"АКТИВНА" if client.accountStatus().plus.has_plus else "НЕАКТИВНА"}.')
         return client
-
-
-api2 = ApiClient()

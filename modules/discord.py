@@ -1,15 +1,13 @@
 from pypresence import Presence
-from time import time, sleep
-from traceback import format_exc
+from time import time
 
 from gui.controller import gui
 
 from modules.formate import formate_string
 from modules.data import data, WAVE_ICON, PNG_LOGO
-from modules.yandex import api2
 from modules.debugger import debugger
 from modules.formate import cut_string
-from pypresence.exceptions import PipeClosed
+from modules.yandex import YandexResponse
 
 import re
 
@@ -28,7 +26,6 @@ class RPC:
         self.last_description = None
         self.last_track_id = None
         self.last_timer = 0
-        self.autoupdate = None
         self.now = 'clear'
 
         self.confirm_settings()
@@ -36,22 +33,6 @@ class RPC:
     def create(self):
         self.client = Presence(1116090392123822080)
         self.client.connect()
-
-    def start_autoupdate(self):
-        self.autoupdate = True
-        while self.autoupdate:
-            try:
-                self.update()
-            except PipeClosed:
-                gui.main.force_disconnect('Соединение с Discord потеряно', False)
-            except:
-                debugger.addInfo('Не удалось обновить очередь')
-                debugger.addError(format_exc())
-            sleep(data.request)
-        self.remove()
-
-    def stop_autoupdate(self):
-        self.autoupdate = False
 
     def confirm_settings(self):
         if data.logo:
@@ -121,12 +102,19 @@ class RPC:
         if not self.wave_buttons:
             self.wave_buttons = None
 
-    def update(self):
+    def update(self, resp: YandexResponse | None = None):
         track = data.track
         wave = data.wave
-        resp = api2.update()
-        if not resp:
+        if resp is None:
+            if self.now == 'c':
+                return
+            gui.main.set_title('Нет данных')
+            gui.main.set_author('')
+            gui.main.set_icon(PNG_LOGO, name='logo.png')
+            self.client.clear()
+            self.now = 'c'
             return
+        
         if resp.track: # Трек
             if self.last_track_id != resp.track.id:
                 self.last_track_id = resp.track.id

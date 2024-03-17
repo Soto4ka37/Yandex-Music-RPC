@@ -1,4 +1,4 @@
-VERSION = 'v1.3'
+VERSION = 'v1.3.1'
 
 import wx
 import sys
@@ -19,7 +19,8 @@ class WarningDialog(wx.Dialog):
     
         panel_sizer = wx.BoxSizer(wx.VERTICAL)
         
-        text = '''Спасибо за установку Yandex Music RPC!
+        text = '''
+Спасибо за установку Yandex Music RPC!
 
 В данный момент API Яндекс Музыки работает нестабильно.
 
@@ -27,9 +28,9 @@ class WarningDialog(wx.Dialog):
 
 1) В браузерной версии по причине неизвестной ошибки на стороне Яндекса.
 
-2) В новом клиенте по причине отсутсвии синхронизации с серверами.
+2) В новом клиенте по причине отсутсвия синхронизации с серверами.
 
-Также на некоторых аккаунтах скрипт может не работать ПОЛНОСТЬЮ.'''
+'''
         static_text = wx.StaticText(panel, label=text)
         panel_sizer.Add(static_text, 0, wx.ALL, 5)
 

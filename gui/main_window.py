@@ -13,17 +13,21 @@ from gui.controller import gui
 
 from modules.debugger import debugger
 from modules.data import data, VERSION, LOGO, CACHE_DIR, PNG_LOGO
-from modules.yandex import api2
 from modules.discord import rpc
+from modules.yandex import ApiClient
 
 from pypresence import exceptions as presense_exc
+from yandex_music import exceptions as yandex_exc
+
 class MainWindow(wx.Frame):
     def __init__(self, parent = None):
         wx.Frame.__init__(self, parent, title=f'RPC {VERSION}', size=(450, 130), style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
 
         self.dragging = None
         self.connecting = None
-        self.autoudate = None
+        self.autoupdate = None
+        self.autoupdate_trhead = None
+        self.api = None
         self.last_connect = 0
 
         self.panel = wx.Panel(self)
@@ -33,7 +37,7 @@ class MainWindow(wx.Frame):
         self.SetIcon(wx.Icon(LOGO))
 
         self.checkbox = wx.CheckBox(self.panel, label='- Активировать / Деактивировать', pos=(90, 10))
-        self.checkbox.Bind(wx.EVT_CHECKBOX, self.connect)
+        self.checkbox.Bind(wx.EVT_CHECKBOX, self.start_connect)
 
         self.button = wx.Button(self.panel, label='Параметры', pos=(300, 8), size=(130, 20))
         self.button.Bind(wx.EVT_BUTTON, self.open_settings)
@@ -61,8 +65,8 @@ class MainWindow(wx.Frame):
         self.checkbox.SetValue(data.auto_connect)
         self.Show(True)
         if data.auto_connect:
-            self.connect()
-
+            self.start_connect()
+            
     def drag_task(self):
         click_pos = wx.GetMousePosition() - self.GetPosition()
         while self.dragging:
@@ -80,7 +84,7 @@ class MainWindow(wx.Frame):
             self.dragging = False
 
     def force_disconnect(self, reason: str, error: bool = True):
-        rpc.stop_autoupdate()
+        self.autoupdate = False
         if reason != 'Вы переподключаетесь слишком часто!':
             self.last_connect = time()
         if error:
@@ -93,8 +97,15 @@ class MainWindow(wx.Frame):
         debugger.addInfo(f'Аварийное завершение: {reason}')
         self.checkbox.SetValue(False)
 
-    def connect(self, event: wx.Event = None):
+    def start_connect(self, event: wx.Event = None):
         checkbox = self.checkbox
+        try:
+            if self.api is None:
+                self.checkbox.Disable()
+                self.api = ApiClient()
+        except:
+            self.title.SetLabel('Авторизация не удалась')
+            return
         if self.connecting and self.connecting.is_alive():
             checkbox.SetValue(not checkbox.GetValue())
             return
@@ -109,58 +120,86 @@ class MainWindow(wx.Frame):
             self.checkbox.Disable()
             self.set_title('Загрузка...')
             self.set_author('')
-            self.connecting = Thread(target=self.after_connect, name='Connecting')
+            self.connecting = Thread(target=self.connect, name='Connecting')
             self.connecting.start()
         else:
             debugger.addInfo('Пользователь деактивировал программу')
             self.last_connect = time()
-            rpc.stop_autoupdate()
+            self.autoupdate = False
             self.set_title('Работа завершена')
             self.set_author('')
             self.set_icon(PNG_LOGO, name='logo.png')
 
-    def after_connect(self):
-        self.set_author('Подключение к api.music.yandex.ru')
+    def connect(self):
         try:
-            api2.update()
-        except Exception as e:
-            debugger.addInfo('Запрос на api.music.yandex.ru не удался')
-            self.force_disconnect(str(e), True)
-            debugger.addError(format_exc())
-            self.checkbox.Enable()
-            return # Если первый запрос не удался
-
-        self.set_author('Подключение к Discord RPC')
-
-        try:
+            self.set_author('Подключение к Discord RPC...')
             rpc.create()
+
+            self.set_author('Ожидание ответа от яндекса...')
+            resp = self.api.update()
+            rpc.update(resp)
+
         except presense_exc.DiscordNotFound:
             self.force_disconnect('Не удалось установить соединение с Discord RPC', False)
             debugger.addError(format_exc())
             self.checkbox.Enable()
-            return # Если не удалось подключиться к Discord RPC
+            return
 
-        try:
-            rpc.update()
+        except yandex_exc.TimedOutError:
+            debugger.addWarning('YandexMusic: TimedOut')
+
+        except yandex_exc.NotFoundError:
+            debugger.addWarning('YandexMusic: NotFound')
+
+        except yandex_exc.BadRequestError:
+            debugger.addWarning('YandexMusic: BadRequest')
+
         except Exception as e:
+            debugger.addInfo('Произошла ошибка при подключении')
             self.force_disconnect(str(e), True)
-            debugger.addInfo('Не удалось обновить статус')
             debugger.addError(format_exc())
             self.checkbox.Enable()
-            return # Если не удалось обновнить статус
+            return
 
-        if self.autoudate and self.autoudate.is_alive():
-            while self.autoudate.is_alive():
+
+        if self.autoupdate_trhead and self.autoupdate_trhead.is_alive():
+            while self.autoupdate_trhead.is_alive():
                 self.set_author('Ожидание завершения предыдущего потока')
                 sleep(1)
-
-        self.autoudate = Thread(target=rpc.start_autoupdate, name='UpdateThread')
-        self.autoudate.start()
+        self.autoupdate_trhead = Thread(target=self.start_autoupdate, name='UpdateThread')
+        self.autoupdate_trhead.start()
         self.checkbox.Enable()
+
+    def start_autoupdate(self):
+        self.autoupdate = True
+        while self.autoupdate:
+            try:
+                resp = self.api.update()
+                rpc.update(resp)
+            except yandex_exc.TimedOutError:
+                debugger.addWarning('YandexMusic: TimedOut')
+
+            except yandex_exc.NotFoundError:
+                debugger.addWarning('YandexMusic: NotFound')
+
+            except yandex_exc.BadRequestError:
+                debugger.addWarning('YandexMusic: BadRequest')
+                resp = None
+                rpc.update(resp)
+            except presense_exc.PipeClosed:
+                self.force_disconnect('Соединение с Discord потеряно', False)
+                self.autoupdate = False
+            except Exception as e:
+                debugger.addInfo('Произошла ошибка во время работы')
+                self.force_disconnect(str(e), True)
+                self.autoupdate = False
+            finally:
+                sleep(data.request)
+        rpc.remove()
 
     def exit(self):
         data.exit_position_x, data.exit_position_y = self.GetPosition()
-        rpc.stop_autoupdate()
+        self.autoupdate = False
         self.tray_icon.Destroy()
         if gui.settings:
             gui.settings.Destroy()
@@ -279,8 +318,9 @@ class TrayIcon(TaskBarIcon):
 
     def onExit(self, event: wx.Event):
         data.exit_position_x, data.exit_position_y = self.frame.GetPosition()
-        rpc.stop_autoupdate()
-        self.frame.Destroy()
+        gui.main.autoupdate = False
+        gui.main.Destroy()
+        gui.main = None
         if gui.settings:
             gui.settings.Destroy()
             gui.settings = None

@@ -34,8 +34,10 @@ def check_updates():
             latest = response.json()
             latest_version = latest["tag_name"]
             debugger.addInfo(f'Установлена версия: {VERSION}. Последняя версия на GitHub: {latest_version}')
+            print(check_versions(VERSION, latest_version))
             if check_versions(VERSION, latest_version):
-                dialog = YesNoDialog(None, 'Версия устарела', f'Ваша версия ({VERSION}) устарела. Последняя версия: {latest_version}. Открыть GitHub?')
+                dialog = YesNoDialog(None, 'Версия устарела', f'Ваша версия ({VERSION}) устарела. Последняя версия: {latest_version}.\nЖелаете открыть GitHub?')
+                dialog.ShowModal()
                 if dialog.answer:
                     openWeb("https://github.com/Soto4ka37/Yandex-Music-RPC/releases/latest")
                     sys.exit()
