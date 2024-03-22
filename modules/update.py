@@ -34,7 +34,6 @@ def check_updates():
             latest = response.json()
             latest_version = latest["tag_name"]
             debugger.addInfo(f'Установлена версия: {VERSION}. Последняя версия на GitHub: {latest_version}')
-            print(check_versions(VERSION, latest_version))
             if check_versions(VERSION, latest_version):
                 dialog = YesNoDialog(None, 'Версия устарела', f'Ваша версия ({VERSION}) устарела. Последняя версия: {latest_version}.\nЖелаете открыть GitHub?')
                 dialog.ShowModal()

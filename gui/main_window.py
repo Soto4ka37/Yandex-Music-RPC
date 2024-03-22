@@ -191,8 +191,16 @@ class MainWindow(wx.Frame):
                 self.autoupdate = False
             except Exception as e:
                 debugger.addInfo('Произошла ошибка во время работы')
+                debugger.addError(format_exc())
                 self.force_disconnect(str(e), True)
                 self.autoupdate = False
+                debugger.addInfo('Попытка переподключения...')
+                self.checkbox.SetValue(True)
+                self.checkbox.Disable()
+                self.connecting = Thread(target=self.connect, name='Reconnecting')
+                self.connecting.start()
+                self.set_title('Переподключение после ошибки...')
+
             finally:
                 sleep(data.request)
         rpc.remove()
